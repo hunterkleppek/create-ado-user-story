@@ -20,18 +20,32 @@ inputs:
   ado-area:
     required: true
     description: 'Azure DevOps Area Path for the work item'
+  ado-tags:
+    required: false
+    description: 'Comma-separated list of tags to apply to the work item'
 runs:
   using: 'composite'
   steps:
     - run: |
         ISSUE_TITLE="${{ github.event.issue.title }}"
         ISSUE_BODY="${{ github.event.issue.body }}"
+
+        # This setting the title
         JSON_PAYLOAD="[{\"op\":\"add\",\"path\":\"/fields/System.Title\",\"value\":\"$ISSUE_TITLE\"}"
+
+        # This is setting the body
         JSON_PAYLOAD+=" ,{\"op\":\"add\",\"path\":\"/fields/System.Description\",\"value\":\"$ISSUE_BODY\"}"
-        JSON_PAYLOAD+=" ,{\"op\":\"add\",\"path\":\"/fields/System.Tags\",\"value\":\"Innovation Backlog\"}"
-        if [ -n "${{ inputs.ado-area }}" ]; then
-          JSON_PAYLOAD+=" ,{\"op\":\"add\",\"path\":\"/fields/System.AreaPath\",\"value\":\"${{ inputs.ado-area }}\"}"
+
+        # This is setting and adding the tags
+        TAGS_VALUE="${{ inputs.ado-tags }}"
+        if [ -z "$TAGS_VALUE" ]; then
+          JSON_PAYLOAD+=" ,{\"op\":\"add\",\"path\":\"/fields/System.Tags\",\"value\":\"$TAGS_VALUE\"}"
         fi
+
+        # This is setting the area path/board this will go on
+        JSON_PAYLOAD+=" ,{\"op\":\"add\",\"path\":\"/fields/System.AreaPath\",\"value\":\"${{ inputs.ado-area }}\"}"
+
+        # This is adding the relationship to the parent
         JSON_PAYLOAD+=" ,{\"op\":\"add\",\"path\":\"/relations/-\",\"value\":{\"rel\":\"System.LinkTypes.Hierarchy-Reverse\",\"url\":\"https://dev.azure.com/${{ inputs.ado-org }}/${{ inputs.ado-project }}/_apis/wit/workItems/${{ inputs.ado-epic-id }}\"}}]"
         echo "$JSON_PAYLOAD" > payload.json
         WORK_ITEM_TYPE_ENC=$(echo -n "${{ inputs.ado-work-item-type }}" | sed 's/ /%20/g')
