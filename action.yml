@@ -34,9 +34,18 @@ runs:
         JSON_PAYLOAD="[{\"op\":\"add\",\"path\":\"/fields/System.Title\",\"value\":\"$ISSUE_TITLE\"},{\"op\":\"add\",\"path\":\"/fields/System.Description\",\"value\":\"$ISSUE_BODY\"},{\"op\":\"add\",\"path\":\"/fields/System.Tags\",\"value\":\"Innovation Backlog\"},{\"op\":\"add\",\"path\":\"/relations/-\",\"value\":{\"rel\":\"System.LinkTypes.Hierarchy-Reverse\",\"url\":\"https://dev.azure.com/${{ inputs.ado-org }}/${{ inputs.ado-project }}/_apis/wit/workItems/${{ inputs.ado-epic-id }}\"}}]"
         echo "$JSON_PAYLOAD" > payload.json
         cat payload.json
-        curl --verbose -X PATCH \
+        RESPONSE=$(curl --silent --show-error --fail -X PATCH \
           -H "Content-Type: application/json-patch+json" \
           -H "Authorization: Basic $(echo -n :${{ inputs.ado-pat }} | base64 | tr -d '\n')" \
           --data-binary @payload.json \
-          "https://dev.azure.com/${{ inputs.ado-org }}/${{ inputs.ado-project }}/_apis/wit/workitems/\$type=$(echo -n '${{ inputs.ado-work-item-type }}' | sed 's/ /%20/g')?api-version=7.0"
+          "https://dev.azure.com/${{ inputs.ado-org }}/${{ inputs.ado-project }}/_apis/wit/workitems/\$type=$(echo -n '${{ inputs.ado-work-item-type }}' | sed 's/ /%20/g')?api-version=7.0")
+        echo "$RESPONSE"
+        WORK_ITEM_ID=$(echo "$RESPONSE" | grep -o '"id":[0-9]*' | head -n1 | grep -o '[0-9]*')
+        if [ -n "$WORK_ITEM_ID" ]; then
+          STORY_URL="https://dev.azure.com/${{ inputs.ado-org }}/${{ inputs.ado-project }}/_workitems/edit/$WORK_ITEM_ID"
+          echo "Created work item: $STORY_URL"
+          echo "::set-output name=story-url::$STORY_URL"
+        else
+          echo "Failed to parse work item ID from response."
+        fi
       shell: bash
