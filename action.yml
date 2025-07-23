@@ -35,10 +35,6 @@ runs:
         ESCAPED_AREA_PATH=$(echo "$RAW_AREA_PATH" | sed 's/\\/\\\\/g')
 
         TAGS_VALUE="${{ inputs.ado-tags }}"
-        echo "[DEBUG] TAGS_VALUE: $TAGS_VALUE"
-        if [ -z "$TAGS_VALUE" ]; then
-          echo "[DEBUG] No tags provided, using default."
-        fi
 
         # Build JSON patch array using jq for robust escaping
         jq -n \
@@ -55,18 +51,13 @@ runs:
             {op: "add", path: "/relations/-", value: {rel: "System.LinkTypes.Hierarchy-Reverse", url: $parent_url}}
           ]' > payload.json
 
-        echo "[DEBUG] payload.json contents:"
-        cat payload.json
-
         WORK_ITEM_TYPE_ENC=$(echo -n "${{ inputs.ado-work-item-type }}" | sed 's/ /%20/g')
         CREATE_URL="https://dev.azure.com/${{ inputs.ado-org }}/${{ inputs.ado-project }}/_apis/wit/workitems/\$${WORK_ITEM_TYPE_ENC}?api-version=7.0"
-        echo "[DEBUG] CREATE_URL: $CREATE_URL"
         RESPONSE=$(curl --silent --show-error -X PATCH \
           -H "Content-Type: application/json-patch+json" \
           -H "Authorization: Basic $(echo -n :${{ inputs.ado-pat }} | base64 | tr -d '\n')" \
           --data-binary @payload.json \
           "$CREATE_URL")
-        echo "[DEBUG] RESPONSE: $RESPONSE"
         WORK_ITEM_ID=$(echo "$RESPONSE" | grep -o '"id":[0-9]*' | head -n1 | grep -o '[0-9]*')
         if [ -n "$WORK_ITEM_ID" ]; then
           STORY_URL="https://dev.azure.com/${{ inputs.ado-org }}/${{ inputs.ado-project }}/_workitems/edit/$WORK_ITEM_ID"
