@@ -17,13 +17,20 @@ inputs:
     required: false
     description: 'Azure DevOps Work Item Type (e.g., User Story, Product Backlog Item, Bug)'
     default: 'User Story'
+  ado-area:
+    required: true
+    description: 'Azure DevOps Area Path for the work item'
 runs:
   using: 'composite'
   steps:
     - run: |
         ISSUE_TITLE="${{ github.event.issue.title }}"
         ISSUE_BODY="${{ github.event.issue.body }}"
-        JSON_PAYLOAD="[{\"op\":\"add\",\"path\":\"/fields/System.Title\",\"value\":\"$ISSUE_TITLE\"},{\"op\":\"add\",\"path\":\"/fields/System.Description\",\"value\":\"$ISSUE_BODY\"},{\"op\":\"add\",\"path\":\"/fields/System.Tags\",\"value\":\"Innovation Backlog\"},{\"op\":\"add\",\"path\":\"/relations/-\",\"value\":{\"rel\":\"System.LinkTypes.Hierarchy-Reverse\",\"url\":\"https://dev.azure.com/${{ inputs.ado-org }}/${{ inputs.ado-project }}/_apis/wit/workItems/${{ inputs.ado-epic-id }}\"}}]"
+        JSON_PAYLOAD="[{\"op\":\"add\",\"path\":\"/fields/System.Title\",\"value\":\"$ISSUE_TITLE\"},{\"op\":\"add\",\"path\":\"/fields/System.Description\",\"value\":\"$ISSUE_BODY\"},{\"op\":\"add\",\"path\":\"/fields/System.Tags\",\"value\":\"Innovation Backlog\"}"
+        if [ -n "${{ inputs.ado-area }}" ]; then
+          JSON_PAYLOAD+="},{\"op\":\"add\",\"path\":\"/fields/System.AreaPath\",\"value\":\"${{ inputs.ado-area }}\""
+        fi
+        JSON_PAYLOAD+="},{\"op\":\"add\",\"path\":\"/relations/-\",\"value\":{\"rel\":\"System.LinkTypes.Hierarchy-Reverse\",\"url\":\"https://dev.azure.com/${{ inputs.ado-org }}/${{ inputs.ado-project }}/_apis/wit/workItems/${{ inputs.ado-epic-id }}\"}}]"
         echo "$JSON_PAYLOAD" > payload.json
         WORK_ITEM_TYPE_ENC=$(echo -n "${{ inputs.ado-work-item-type }}" | sed 's/ /%20/g')
         CREATE_URL="https://dev.azure.com/${{ inputs.ado-org }}/${{ inputs.ado-project }}/_apis/wit/workitems/\$${WORK_ITEM_TYPE_ENC}?api-version=7.0"
