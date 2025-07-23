@@ -43,20 +43,34 @@ runs:
 
         TAGS_VALUE="${{ inputs.ado-tags }}"
 
-        # Build JSON patch array using jq for robust escaping
-        jq -n \
-          --arg title "$ISSUE_TITLE" \
-          --arg desc "$ISSUE_BODY" \
-          --arg tags "$TAGS_VALUE" \
-          --arg area "$ESCAPED_AREA_PATH" \
-          --arg parent_url "https://dev.azure.com/${{ inputs.ado-org }}/${{ inputs.ado-project }}/_apis/wit/workItems/${{ inputs.ado-epic-id }}" \
-          '[
-            {op: "add", path: "/fields/System.Title", value: $title},
-            {op: "add", path: "/fields/System.Description", value: $desc},
-            {op: "add", path: "/fields/System.Tags", value: $tags},
-            {op: "add", path: "/fields/System.AreaPath", value: $area},
-            {op: "add", path: "/relations/-", value: {rel: "System.LinkTypes.Hierarchy-Reverse", url: $parent_url}}
-          ]' > payload.json
+        # Build JSON patch array using jq for robust escaping, only add tags if present
+        if [ -n "$TAGS_VALUE" ]; then
+          jq -n \
+            --arg title "$ISSUE_TITLE" \
+            --arg desc "$ISSUE_BODY" \
+            --arg tags "$TAGS_VALUE" \
+            --arg area "$ESCAPED_AREA_PATH" \
+            --arg parent_url "https://dev.azure.com/${{ inputs.ado-org }}/${{ inputs.ado-project }}/_apis/wit/workItems/${{ inputs.ado-epic-id }}" \
+            '[
+              {op: "add", path: "/fields/System.Title", value: $title},
+              {op: "add", path: "/fields/System.Description", value: $desc},
+              {op: "add", path: "/fields/System.Tags", value: $tags},
+              {op: "add", path: "/fields/System.AreaPath", value: $area},
+              {op: "add", path: "/relations/-", value: {rel: "System.LinkTypes.Hierarchy-Reverse", url: $parent_url}}
+            ]' > payload.json
+        else
+          jq -n \
+            --arg title "$ISSUE_TITLE" \
+            --arg desc "$ISSUE_BODY" \
+            --arg area "$ESCAPED_AREA_PATH" \
+            --arg parent_url "https://dev.azure.com/${{ inputs.ado-org }}/${{ inputs.ado-project }}/_apis/wit/workItems/${{ inputs.ado-epic-id }}" \
+            '[
+              {op: "add", path: "/fields/System.Title", value: $title},
+              {op: "add", path: "/fields/System.Description", value: $desc},
+              {op: "add", path: "/fields/System.AreaPath", value: $area},
+              {op: "add", path: "/relations/-", value: {rel: "System.LinkTypes.Hierarchy-Reverse", url: $parent_url}}
+            ]' > payload.json
+        fi
 
         WORK_ITEM_TYPE_ENC=$(echo -n "${{ inputs.ado-work-item-type }}" | sed 's/ /%20/g')
         CREATE_URL="https://dev.azure.com/${{ inputs.ado-org }}/${{ inputs.ado-project }}/_apis/wit/workitems/\$${WORK_ITEM_TYPE_ENC}?api-version=7.0"
