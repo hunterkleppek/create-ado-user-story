@@ -1,5 +1,6 @@
 name: 'Create ADO User Story'
 description: 'Creates a user story in Azure DevOps from a GitHub issue'
+runs:
 inputs:
   ado-org:
     required: true
@@ -13,6 +14,10 @@ inputs:
   ado-pat:
     required: true
     description: 'Azure Personal Access Token'
+  ado-work-item-type:
+    required: false
+    description: 'Azure DevOps Work Item Type (e.g., User Story, Product Backlog Item, Bug)'
+    default: 'User Story'
 runs:
   using: 'composite'
   steps:
@@ -33,5 +38,5 @@ runs:
           -H "Content-Type: application/json-patch+json" \
           -H "Authorization: Basic $(echo -n :${{ inputs.ado-pat }} | base64 | tr -d '\n')" \
           --data-binary @payload.json \
-          "https://dev.azure.com/${{ inputs.ado-org }}/${{ inputs.ado-project }}/_apis/wit/workitems/\$type=User%20Story?api-version=7.0"
+          "https://dev.azure.com/${{ inputs.ado-org }}/${{ inputs.ado-project }}/_apis/wit/workitems/\$type=$(echo -n '${{ inputs.ado-work-item-type }}' | sed 's/ /%20/g')?api-version=7.0"
       shell: bash
