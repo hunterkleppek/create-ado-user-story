@@ -23,7 +23,7 @@ runs:
         echo "$JSON_PAYLOAD" > payload.json
         curl -X PATCH \
           -H "Content-Type: application/json-patch+json" \
-          -H "Authorization: Basic $(echo -n :${{ secrets.ADO_PAT }} | base64)" \
+          -H "Authorization: Basic $(echo -n :${{ inputs.ado-pat }} | base64)" \
           --data-binary @payload.json \
           "https://dev.azure.com/${{ inputs.ado-org }}/${{ inputs.ado-project }}/_apis/wit/workitems/\$type=User%20Story?api-version=7.0"
       shell: bash
