@@ -10,9 +10,6 @@ inputs:
   ado-epic-id:
     required: true
     description: 'Azure DevOps Epic ID'
-  ado-pat:
-    required: true
-    description: 'Azure Personal Access Token'
   ado-work-item-type:
     required: false
     description: 'Azure DevOps Work Item Type (e.g., User Story, Product Backlog Item, Bug)'
@@ -23,11 +20,18 @@ inputs:
   ado-tags:
     required: false
     description: 'Comma-separated list of tags to apply to the work item'
+  repository-name:
+    required: false
+    description: 'The repository name to be appended to the front of the title'
 runs:
   using: 'composite'
   steps:
     - run: |
-        ISSUE_TITLE="${{ github.event.issue.title }}"
+        if [ -n "${{ inputs.repository-name }}" ]; then
+          ISSUE_TITLE="${{ inputs.repository-name }} - ${{ github.event.issue.title }}"
+        else
+          ISSUE_TITLE="${{ github.event.issue.title }}"
+        fi
         ISSUE_BODY="${{ github.event.issue.body }}"
 
         # Escape backslashes in area path for JSON
