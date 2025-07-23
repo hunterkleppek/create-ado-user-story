@@ -1,0 +1,26 @@
+name: 'Create ADO User Story'
+description: 'Creates a user story in Azure DevOps from a GitHub issue'
+inputs:
+  ado-org:
+    required: true
+    description: 'Azure DevOps organization'
+  ado-project:
+    required: true
+    description: 'Azure DevOps project'
+  ado-epic-id:
+    required: true
+    description: 'Azure DevOps Epic ID'
+runs:
+  using: 'composite'
+  steps:
+    - run: |
+        ISSUE_TITLE="${{ github.event.issue.title }}"
+        ISSUE_BODY="${{ github.event.issue.body }}"
+        JSON_PAYLOAD="[{\"op\":\"add\",\"path\":\"/fields/System.Title\",\"value\":\"$ISSUE_TITLE\"},{\"op\":\"add\",\"path\":\"/fields/System.Description\",\"value\":\"$ISSUE_BODY\"},{\"op\":\"add\",\"path\":\"/fields/System.Tags\",\"value\":\"Innovation Backlog\"},{\"op\":\"add\",\"path\":\"/relations/-\",\"value\":{\"rel\":\"System.LinkTypes.Hierarchy-Reverse\",\"url\":\"https://dev.azure.com/${{ inputs.ado-org }}/${{ inputs.ado-project }}/_apis/wit/workItems/${{ inputs.ado-epic-id }}\"}}]"
+        echo "$JSON_PAYLOAD" > payload.json
+        curl -X PATCH \
+          -H "Content-Type: application/json-patch+json" \
+          -H "Authorization: Basic $(echo -n :${{ secrets.ADO_PAT }} | base64)" \
+          --data-binary @payload.json \
+          "https://dev.azure.com/${{ inputs.ado-org }}/${{ inputs.ado-project }}/_apis/wit/workitems/\$type=User%20Story?api-version=7.0"
+      shell: bash
