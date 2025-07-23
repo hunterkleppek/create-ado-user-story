@@ -1,6 +1,5 @@
 name: 'Create ADO User Story'
 description: 'Creates a user story in Azure DevOps from a GitHub issue'
-runs:
 inputs:
   ado-org:
     required: true
