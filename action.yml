@@ -17,6 +17,13 @@ runs:
   using: 'composite'
   steps:
     - run: |
+        set -x
+        echo "ISSUE_TITLE: $ISSUE_TITLE"
+        echo "ISSUE_BODY: $ISSUE_BODY"
+        echo "ADO_ORG: ${{ inputs.ado-org }}"
+        echo "ADO_PROJECT: ${{ inputs.ado-project }}"
+        echo "ADO_EPIC_ID: ${{ inputs.ado-epic-id }}"
+        # ...rest of your script...
         ISSUE_TITLE="${{ github.event.issue.title }}"
         ISSUE_BODY="${{ github.event.issue.body }}"
         JSON_PAYLOAD="[{\"op\":\"add\",\"path\":\"/fields/System.Title\",\"value\":\"$ISSUE_TITLE\"},{\"op\":\"add\",\"path\":\"/fields/System.Description\",\"value\":\"$ISSUE_BODY\"},{\"op\":\"add\",\"path\":\"/fields/System.Tags\",\"value\":\"Innovation Backlog\"},{\"op\":\"add\",\"path\":\"/relations/-\",\"value\":{\"rel\":\"System.LinkTypes.Hierarchy-Reverse\",\"url\":\"https://dev.azure.com/${{ inputs.ado-org }}/${{ inputs.ado-project }}/_apis/wit/workItems/${{ inputs.ado-epic-id }}\"}}]"
