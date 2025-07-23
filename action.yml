@@ -10,6 +10,9 @@ inputs:
   ado-epic-id:
     required: true
     description: 'Azure DevOps Epic ID'
+  ado-pat:
+    required: true
+    description: 'ADO Personal Access Token'
   ado-work-item-type:
     required: false
     description: 'Azure DevOps Work Item Type (e.g., User Story, Product Backlog Item, Bug)'
