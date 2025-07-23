@@ -33,11 +33,13 @@ runs:
         JSON_PAYLOAD="[{\"op\":\"add\",\"path\":\"/fields/System.Title\",\"value\":\"$ISSUE_TITLE\"},{\"op\":\"add\",\"path\":\"/fields/System.Description\",\"value\":\"$ISSUE_BODY\"},{\"op\":\"add\",\"path\":\"/fields/System.Tags\",\"value\":\"Innovation Backlog\"},{\"op\":\"add\",\"path\":\"/relations/-\",\"value\":{\"rel\":\"System.LinkTypes.Hierarchy-Reverse\",\"url\":\"https://dev.azure.com/${{ inputs.ado-org }}/${{ inputs.ado-project }}/_apis/wit/workItems/${{ inputs.ado-epic-id }}\"}}]"
         echo "$JSON_PAYLOAD" > payload.json
         cat payload.json
+        WORK_ITEM_TYPE_ENC=$(echo -n "${{ inputs.ado-work-item-type }}" | sed 's/ /%20/g')
+        CREATE_URL="https://dev.azure.com/${{ inputs.ado-org }}/${{ inputs.ado-project }}/_apis/wit/workitems/\$${WORK_ITEM_TYPE_ENC}?api-version=7.0"
         RESPONSE=$(curl --silent --show-error --fail -X PATCH \
           -H "Content-Type: application/json-patch+json" \
           -H "Authorization: Basic $(echo -n :${{ inputs.ado-pat }} | base64 | tr -d '\n')" \
           --data-binary @payload.json \
-          "https://dev.azure.com/${{ inputs.ado-org }}/${{ inputs.ado-project }}/_apis/wit/workitems/\$(echo -n '${{ inputs.ado-work-item-type }}' | sed 's/ /%20/g')?api-version=7.0")
+          "$CREATE_URL")
         echo "$RESPONSE"
         WORK_ITEM_ID=$(echo "$RESPONSE" | grep -o '"id":[0-9]*' | head -n1 | grep -o '[0-9]*')
         if [ -n "$WORK_ITEM_ID" ]; then
