@@ -10,6 +10,9 @@ inputs:
   ado-epic-id:
     required: true
     description: 'Azure DevOps Epic ID'
+  ado-pat:
+    required: true
+    description: 'Azure Personal Access Token'
 runs:
   using: 'composite'
   steps:
