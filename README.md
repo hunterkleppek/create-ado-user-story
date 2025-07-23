@@ -23,11 +23,11 @@ jobs:
     steps:
       - uses: your-org/your-repo@main
         with:
-          ado-org: 'SECURAInsurance'
-          ado-project: 'Suite'
-          ado-epic-id: '53326'
+          ado-org: 'TestOrg'
+          ado-project: 'TestProject'
+          ado-epic-id: '45879'
           ado-work-item-type: 'User Story'
-          ado-area: 'Suite\\Integrations - 1'
+          ado-area: 'TestProject\\TestingBoard'
           ado-tags: "Innovation Backlog"
           repository-name: 'TestActionRepo'
 ```
