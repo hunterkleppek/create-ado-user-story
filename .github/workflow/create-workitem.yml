@@ -1,0 +1,59 @@
+name: 'Create ADO Work Item'
+
+on:
+    workflow_call:
+        inputs:
+            ado-org:
+                type: string
+                required: true
+                description: 'Azure DevOps organization'
+            ado-project:
+                type: string
+                required: true
+                description: 'Azure DevOps project'
+            title:
+                type: string
+                required: true
+                description: 'Title of the work item'
+                default: 'New Work Item'
+            description:
+                type: string
+                description: 'Description of the work item'
+                required: false
+                default: ''
+            type:
+                type: string
+                description: 'Type of the work item (e.g., Task, Bug)'
+                required: true
+                default: 'Task'
+            ado-parent-id:
+                type: string
+                description: 'ID of the parent work item (optional)'
+                required: false
+                default: ''
+            ado-token:
+                type: string
+                description: 'Azure DevOps access token (from service principal)'
+                required: false
+
+defaults:
+    run:
+        shell: pwsh
+
+jobs:
+    create-work-item:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout Repository
+              uses: actions/checkout@v2
+
+            - name: Create ADO Work Item
+              run: |
+                $scriptPath = Join-Path -Path ${{ github.workspace }} -ChildPath "create-ado-workitem.ps1"
+                if ([string]::IsNullOrEmpty("${{ inputs.ado-token }}")) {
+                  # Use PAT authentication
+                  & $scriptPath -Organization "${{ inputs.ado-org }}" -Project "${{ inputs.ado-project }}" -PAT "${{ secrets.ADO_PAT }}" -Title "${{ inputs.title }}" -Description "${{ inputs.description }}" -WorkItemType "${{ inputs.type }}" -ParentId "${{ inputs.ado-parent-id }}"
+                } else {
+                  # Use service principal token
+                  & $scriptPath -Organization "${{ inputs.ado-org }}" -Project "${{ inputs.ado-project }}" -BearerToken "${{ inputs.ado-token }}" -Title "${{ inputs.title }}" -Description "${{ inputs.description }}" -WorkItemType "${{ inputs.type }}" -ParentId "${{ inputs.ado-parent-id }}"
+                }
