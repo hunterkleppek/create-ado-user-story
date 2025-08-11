@@ -35,6 +35,12 @@ on:
                 type: string
                 description: 'Azure DevOps access token (from service principal)'
                 required: false
+            ado-area:
+                type: string
+                description: 'The board you would like the work item to be put on'
+            ado-tags:
+                type: string
+                description: '
 
 defaults:
     run:
