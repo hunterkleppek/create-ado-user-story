@@ -57,6 +57,14 @@ jobs:
           tenant-id: ${{ secrets.ADO_SP_TENANT_ID }}
           client-secret: ${{ secrets.ADO_SP_CLIENT_SECRET }}
           organization: ${{ github.event.inputs.ado-organization || 'SECURAInsurance' }}
+
+      - name: Debug ADO Token Output
+        run: |
+          if ("${{ steps.get-token.outputs.ado_token }}") {
+            echo "ADO token was set."
+          } else {
+            echo "ADO token is EMPTY!"
+          }
       
       - name: Determine Title, Description and Type
         id: work-item-details
