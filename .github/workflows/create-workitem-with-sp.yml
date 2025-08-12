@@ -88,7 +88,7 @@ jobs:
           ./PowerShell/create-ado-story.ps1 `
             -Organization "${{ github.event.inputs.ado-organization || 'SECURAInsurance' }}" `
             -Project "${{ github.event.inputs.ado-project }}" `
-            -BearerToken "${{ steps.get-token.outputs.ado_token }}" `
+            -BearerToken "${{ steps.get-token.outputs.token }}" `
             -IssueTitle "${{ steps.work-item-details.outputs.title }}" `
             -IssueBody "${{ steps.work-item-details.outputs.description }}" `
             -WorkItemType "${{ steps.work-item-details.outputs.type }}" `
@@ -107,7 +107,7 @@ jobs:
           ./PowerShell/create-ado-story.ps1 `
             -Organization "${{ github.event.inputs.ado-organization }}" `
             -Project "${{ github.event.inputs.ado-project }}" `
-            -BearerToken "${{ steps.get-token.outputs.ado_token }}" `
+            -BearerToken "${{ steps.get-token.outputs.token }}" `
             -IssueTitle "${{ github.event.inputs.title }}" `
             -IssueBody "${{ github.event.inputs.description }}" `
             -WorkItemType "${{ github.event.inputs.type }}" `
