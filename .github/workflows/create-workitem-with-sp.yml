@@ -23,10 +23,6 @@ on:
       ado-project:
         description: 'Azure DevOps project'
         required: true
-      ado-tags:
-        description: 'Comma-separated list of tags'
-        required: false
-        default: 'GitHub,AutoCreated'
   
   # You can also trigger this on issue creation
   issues:
@@ -66,44 +62,43 @@ jobs:
             -IssueTitle "${{ github.event.issue.title }}" `
             -IssueBody "${{ github.event.issue.body }}" `
             -IssueLabels "${{ join(github.event.issue.labels.*.name, ',') }}"
+
+      - name: Dump get-token outputs
+        run: |
+          echo "All outputs from get-token:"
+          echo "${{ toJson(steps.get-token.outputs) }}"
       
       - name: Create ADO Work Item from Issue
         if: github.event_name == 'issues'
         run: |
-          $tagsString = "GitHub,Issue#${{ github.event.issue.number }}"
-          $issueLabels = "${{ join(github.event.issue.labels.*.name, ',') }}"
-          if ($issueLabels) {
-            $tagsString += ",$issueLabels"
-          }
-          
           # Extract area and parent from the issue description in work-item-details
           $areaPath = "${{ steps.work-item-details.outputs.area }}"
           $parentId = "${{ steps.work-item-details.outputs.parent }}"
-          
-          ./PowerShell/create-ado-story.ps1 `
+          $result = ./PowerShell/create-ado-story.ps1 `
             -Organization "${{ github.event.inputs.ado-organization || 'SECURAInsurance' }}" `
             -Project "${{ github.event.inputs.ado-project }}" `
-            -BearerToken "${{ steps.get-token.outputs.token }}" `
+            -BearerToken "${{ steps.get-token.outputs.ado_token }}" `
             -IssueTitle "${{ steps.work-item-details.outputs.title }}" `
             -IssueBody "${{ steps.work-item-details.outputs.description }}" `
             -WorkItemType "${{ steps.work-item-details.outputs.type }}" `
             -ParentId $parentId `
-            -Tags @($tagsString.Split(',')) `
             -AreaPath $areaPath
+          Write-Host "Script output: $result"
+          if ($result -match 'https?://\S+') {
+            Write-Host "Work item link: $($matches[0])"
+          }
       
       - name: Create ADO Work Item from Workflow
         if: github.event_name == 'workflow_dispatch'
         run: |
-          $tagsArray = @()
-          if ("${{ github.event.inputs.ado-tags }}") {
-            $tagsArray = "${{ github.event.inputs.ado-tags }}".Split(',')
-          }
-          
-          ./PowerShell/create-ado-story.ps1 `
+          $result = ./PowerShell/create-ado-story.ps1 `
             -Organization "${{ github.event.inputs.ado-organization }}" `
             -Project "${{ github.event.inputs.ado-project }}" `
-            -BearerToken "${{ steps.get-token.outputs.token }}" `
+            -BearerToken "${{ steps.get-token.outputs.ado_token }}" `
             -IssueTitle "${{ github.event.inputs.title }}" `
             -IssueBody "${{ github.event.inputs.description }}" `
-            -WorkItemType "${{ github.event.inputs.type }}" `
-            -Tags $tagsArray
+            -WorkItemType "${{ github.event.inputs.type }}"
+          Write-Host "Script output: $result"
+          if ($result -match 'https?://\S+') {
+            Write-Host "Work item link: $($matches[0])"
+          }
