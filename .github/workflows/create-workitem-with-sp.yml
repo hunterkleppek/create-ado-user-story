@@ -54,9 +54,19 @@ jobs:
           client-secret: ${{ secrets.ADO_SP_CLIENT_SECRET }}
           organization: ${{ github.event.inputs.ado-organization || 'SECURAInsurance' }}
       
+      - name: Parse Description for Workflow Dispatch
+        id: work_item_details
+        if: github.event_name == 'workflow_dispatch'
+        shell: pwsh
+        run: |
+          $parseResult = ./PowerShell/parse-issue-details.ps1 \
+            -IssueTitle "${{ github.event.inputs.title }}" \
+            -IssueBody "${{ github.event.inputs.description }}"
+          Write-Host $parseResult
+
       - name: Determine Title, Description and Type
         id: work-item-details
-        if: github.event_name == 'workflow_dispatch'
+        if: github.event_name == 'issue'
         run: |
           ./PowerShell/parse-issue-details.ps1 `
             -IssueTitle "${{ github.event.issue.title }}" `
@@ -64,7 +74,7 @@ jobs:
             -IssueLabels "${{ join(github.event.issue.labels.*.name, ',') }}"
       
       - name: Create ADO Work Item from Issue
-        if: github.event_name == 'workflow_dispatch'
+        if: github.event_name == 'issue'
         run: |
           # Extract area and parent from the issue description in work-item-details
           $areaPath = "${{ steps.work-item-details.outputs.area }}"
@@ -86,14 +96,17 @@ jobs:
       
       - name: Create ADO Work Item from Workflow
         if: github.event_name == 'workflow_dispatch'
+        shell: pwsh
         run: |
-          $result = ./PowerShell/create-ado-story.ps1 `
-            -Organization "${{ github.event.inputs.ado-organization }}" `
-            -Project "${{ github.event.inputs.ado-project }}" `
-            -BearerToken "${{ steps.get-token.outputs.token }}" `
-            -IssueTitle "${{ github.event.inputs.title }}" `
-            -IssueBody "${{ github.event.inputs.description }}" `
-            -WorkItemType "${{ github.event.inputs.type }}"
+          $result = ./PowerShell/create-ado-story.ps1 \
+            -Organization "${{ github.event.inputs.ado-organization }}" \
+            -Project "${{ github.event.inputs.ado-project }}" \
+            -BearerToken "${{ steps.get-token.outputs.token }}" \
+            -IssueTitle "${{ steps.work_item_details.outputs.title }}" \
+            -IssueBody "${{ steps.work_item_details.outputs.description }}" \
+            -WorkItemType "${{ steps.work_item_details.outputs.type }}" \
+            -ParentId "${{ steps.work_item_details.outputs.parent }}" \
+            -AreaPath "${{ steps.work_item_details.outputs.area }}"
           Write-Host "Script output: $result"
           $linkMatch = [regex]::Match($result, 'https?://\S+')
           if ($linkMatch.Success) {
