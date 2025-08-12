@@ -79,8 +79,9 @@ jobs:
             -ParentId $parentId `
             -AreaPath $areaPath
           Write-Host "Script output: $result"
-          if ($result -match 'https?://\S+') {
-            Write-Host "Work item link: $($matches[0])"
+          $linkMatch = [regex]::Match($result, 'https?://\S+')
+          if ($linkMatch.Success) {
+            Write-Host "Work item link: $($linkMatch.Value)"
           }
       
       - name: Create ADO Work Item from Workflow
@@ -94,6 +95,7 @@ jobs:
             -IssueBody "${{ github.event.inputs.description }}" `
             -WorkItemType "${{ github.event.inputs.type }}"
           Write-Host "Script output: $result"
-          if ($result -match 'https?://\S+') {
-            Write-Host "Work item link: $($matches[0])"
+          $linkMatch = [regex]::Match($result, 'https?://\S+')
+          if ($linkMatch.Success) {
+            Write-Host "Work item link: $($linkMatch.Value)"
           }
