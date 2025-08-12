@@ -12,24 +12,10 @@ on:
         description: 'Description of the work item'
         required: false
         default: ''
-      type:
-        description: 'Type of the work item (e.g., User Story, Task, Bug)'
-        required: true
-        default: 'User Story'
       ado-organization:
         description: 'Azure DevOps organization'
-        required: true
-      ado-project:
-        description: 'Azure DevOps project'
-        required: true
-      ado-parent-id:
-        description: 'ID of the parent work item (e.g., Epic ID)'
         required: false
-        default: ''
-      ado-area:
-        description: 'Area path for the work item'
-        required: false
-        default: ''
+        default: 'SECURAInsurance'
       ado-tags:
         description: 'Comma-separated list of tags'
         required: false
