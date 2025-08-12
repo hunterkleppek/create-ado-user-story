@@ -3,12 +3,14 @@ param(
     [string]$Project,
     [string]$EpicId,
     [string]$Pat,
+    [string]$BearerToken,
     [string]$WorkItemType = "User Story",
     [string]$AreaPath,
-    [string]$Tags = "",
+    [string[]]$Tags = @(),
     [string]$RepositoryName = "",
     [string]$IssueTitle,
-    [string]$IssueBody
+    [string]$IssueBody,
+    [string]$ParentId = ""  # Can be used instead of EpicId
 )
 
 # Process the title
@@ -22,6 +24,9 @@ else {
 # Escape backslashes in area path for JSON
 $EscapedAreaPath = $AreaPath -replace '\\', '\\'
 
+# Determine which parent ID to use (EpicId or ParentId)
+$ParentWorkItemId = if (-not [string]::IsNullOrEmpty($ParentId)) { $ParentId } else { $EpicId }
+
 # Build the base JSON patch document
 $PatchDocument = @(
     @{
@@ -33,28 +38,36 @@ $PatchDocument = @(
         op    = "add"
         path  = "/fields/System.Description"
         value = $IssueBody
-    },
-    @{
+    }
+)
+# Add area path if provided
+if (-not [string]::IsNullOrEmpty($AreaPath)) {
+    $PatchDocument += @{
         op    = "add"
         path  = "/fields/System.AreaPath"
         value = $EscapedAreaPath
-    },
-    @{
+    }
+}
+
+# Add parent link if parent ID is provided
+if (-not [string]::IsNullOrEmpty($ParentWorkItemId)) {
+    $PatchDocument += @{
         op    = "add"
         path  = "/relations/-"
         value = @{
             rel = "System.LinkTypes.Hierarchy-Reverse"
-            url = "https://dev.azure.com/$Organization/$Project/_apis/wit/workItems/$EpicId"
+            url = "https://dev.azure.com/$Organization/$Project/_apis/wit/workItems/$ParentWorkItemId"
         }
     }
-)
+}
 
 # Add tags if provided
-if (-not [string]::IsNullOrEmpty($Tags)) {
+if ($Tags -and $Tags.Count -gt 0) {
+    $TagsString = $Tags -join "; "
     $PatchDocument += @{
         op    = "add"
         path  = "/fields/System.Tags"
-        value = $Tags
+        value = $TagsString
     }
 }
 
@@ -66,10 +79,23 @@ $WorkItemTypeEncoded = [Uri]::EscapeDataString($WorkItemType)
 $CreateUrl = "https://dev.azure.com/$Organization/$Project/_apis/wit/workitems/`$$WorkItemTypeEncoded" + "?api-version=7.0"
 
 # Set up authorization header
-$Base64Pat = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(":$Pat"))
 $Headers = @{
-    Authorization  = "Basic $Base64Pat"
     "Content-Type" = "application/json-patch+json"
+}
+
+# Add appropriate authorization header based on provided authentication method
+if (-not [string]::IsNullOrEmpty($Pat)) {
+    # Use PAT authentication
+    $Base64Pat = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(":$Pat"))
+    $Headers["Authorization"] = "Basic $Base64Pat"
+}
+elseif (-not [string]::IsNullOrEmpty($BearerToken)) {
+    # Use OAuth Bearer token (from service principal)
+    $Headers["Authorization"] = "Bearer $BearerToken"
+}
+else {
+    Write-Error "Either Pat or BearerToken must be provided for authentication"
+    throw "Authentication method required"
 }
 
 # Send request to create work item
