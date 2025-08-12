@@ -98,14 +98,14 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         shell: pwsh
         run: |
-          $result = ./PowerShell/create-ado-story.ps1 \
-            -Organization "${{ github.event.inputs.ado-organization }}" \
-            -Project "${{ github.event.inputs.ado-project }}" \
-            -BearerToken "${{ steps.get-token.outputs.token }}" \
-            -IssueTitle "${{ steps.work_item_details.outputs.title }}" \
-            -IssueBody "${{ steps.work_item_details.outputs.description }}" \
-            -WorkItemType "${{ steps.work_item_details.outputs.type }}" \
-            -ParentId "${{ steps.work_item_details.outputs.parent }}" \
+          $result = ./PowerShell/create-ado-story.ps1 `
+            -Organization "${{ github.event.inputs.ado-organization }}" `
+            -Project "${{ github.event.inputs.ado-project }}" `
+            -BearerToken "${{ steps.get-token.outputs.token }}" `
+            -IssueTitle "${{ steps.work_item_details.outputs.title }}" `
+            -IssueBody "${{ steps.work_item_details.outputs.description }}" `
+            -WorkItemType "${{ steps.work_item_details.outputs.type }}" `
+            -ParentId "${{ steps.work_item_details.outputs.parent }}" `
             -AreaPath "${{ steps.work_item_details.outputs.area }}"
           Write-Host "Script output: $result"
           $linkMatch = [regex]::Match($result, 'https?://\S+')
