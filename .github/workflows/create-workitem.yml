@@ -8,10 +8,6 @@ on:
         required: false
         description: 'Azure DevOps organization'
         default: 'SECURAInsurance'
-      ado-project:
-        type: string
-        required: true
-        description: 'Azure DevOps project'
       title:
         type: string
         required: true
@@ -27,28 +23,13 @@ on:
         description: 'Type of the work item (e.g., Task, Bug)'
         required: true
         default: 'Task'
-      ado-parent-id:
-        type: string
-        description: 'ID of the parent work item (optional)'
-        required: false
-        default: ''
       ado-token:
         type: string
         description: 'Azure DevOps access token (from service principal)'
         required: true
-      ado-area:
-        type: string
-        description: 'The board you would like the work item to be put on'
-        required: false
-        default: ''
       ado-tags:
         type: string
         description: 'Comma-separated list of tags to apply to the work item'
-        required: false
-        default: ''
-      issue-body:
-        type: string
-        description: 'Raw issue body (for parsing Area and Parent)'
         required: false
         default: ''
 
