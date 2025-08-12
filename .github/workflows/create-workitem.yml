@@ -1,0 +1,101 @@
+name: 'Create ADO Work Item'
+
+on:
+  workflow_call:
+    inputs:
+      ado-org:
+        type: string
+        required: false
+        description: 'Azure DevOps organization'
+        default: 'SECURAInsurance'
+      ado-project:
+        type: string
+        required: true
+        description: 'Azure DevOps project'
+      title:
+        type: string
+        required: true
+        description: 'Title of the work item'
+        default: 'New Work Item'
+      description:
+        type: string
+        description: 'Description of the work item'
+        required: false
+        default: ''
+      type:
+        type: string
+        description: 'Type of the work item (e.g., Task, Bug)'
+        required: true
+        default: 'Task'
+      ado-parent-id:
+        type: string
+        description: 'ID of the parent work item (optional)'
+        required: false
+        default: ''
+      ado-token:
+        type: string
+        description: 'Azure DevOps access token (from service principal)'
+        required: true
+      ado-area:
+        type: string
+        description: 'The board you would like the work item to be put on'
+        required: false
+        default: ''
+      ado-tags:
+        type: string
+        description: 'Comma-separated list of tags to apply to the work item'
+        required: false
+        default: ''
+      issue-body:
+        type: string
+        description: 'Raw issue body (for parsing Area and Parent)'
+        required: false
+        default: ''
+
+defaults:
+  run:
+    shell: pwsh
+
+jobs:
+  create-work-item:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Parse Description for Area and Parent
+        id: parse-description
+        if: inputs.issue-body != ''
+        run: |
+          ./PowerShell/parse-description.ps1 -IssueBody "${{ inputs.issue-body }}"
+
+      - name: Create ADO Work Item
+        run: |
+          # Get description (cleaned if from issue body, otherwise use input description)
+          $description = "${{ inputs.description }}"
+          if ("${{ steps.parse-description.outputs.clean_description }}" -ne "") {
+            $description = "${{ steps.parse-description.outputs.clean_description }}"
+          }
+          
+          # Get area path (from issue or from input)
+          $areaPath = "${{ inputs.ado-area }}"
+          if ("${{ steps.parse-description.outputs.area }}" -ne "") {
+            $areaPath = "${{ steps.parse-description.outputs.area }}"
+          }
+          
+          # Get parent ID (from issue or from input)
+          $parentId = "${{ inputs.ado-parent-id }}"
+          if ("${{ steps.parse-description.outputs.parent }}" -ne "") {
+            $parentId = "${{ steps.parse-description.outputs.parent }}"
+          }
+          
+          ./PowerShell/create-work-item.ps1 `
+            -Organization "${{ inputs.ado-org }}" `
+            -Project "${{ inputs.ado-project }}" `
+            -Title "${{ inputs.title }}" `
+            -Description "$description" `
+            -WorkItemType "${{ inputs.type }}" `
+            -ParentId "$parentId" `
+            -AreaPath "$areaPath" `
+            -TagsString "${{ inputs.ado-tags }}" `
+            -BearerToken "${{ inputs.ado-token }}"
