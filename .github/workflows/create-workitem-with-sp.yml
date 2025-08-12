@@ -1,0 +1,125 @@
+name: 'Create ADO Work Item using Service Principal'
+
+on:
+  # You can customize these triggers as needed
+  workflow_dispatch:
+    inputs:
+      title:
+        description: 'Title of the work item'
+        required: true
+        default: 'New Work Item'
+      description:
+        description: 'Description of the work item'
+        required: false
+        default: ''
+      type:
+        description: 'Type of the work item (e.g., User Story, Task, Bug)'
+        required: true
+        default: 'User Story'
+      ado-organization:
+        description: 'Azure DevOps organization'
+        required: true
+      ado-project:
+        description: 'Azure DevOps project'
+        required: true
+      ado-parent-id:
+        description: 'ID of the parent work item (e.g., Epic ID)'
+        required: false
+        default: ''
+      ado-area:
+        description: 'Area path for the work item'
+        required: false
+        default: ''
+      ado-tags:
+        description: 'Comma-separated list of tags'
+        required: false
+        default: 'GitHub,AutoCreated'
+  
+  # You can also trigger this on issue creation
+  issues:
+    types: [opened, edited]
+
+defaults:
+  run:
+    shell: pwsh
+
+jobs:
+  create-work-item:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      
+      - name: Checkout Token Generator
+        uses: actions/checkout@v3
+        with:
+          repository: hu03939_secura/get-accesstoken-from-serviceprinciple-workflow
+          path: get-token-repo
+      
+      - name: Get Azure DevOps Token
+        id: get-token
+        uses: ./get-token-repo
+        with:
+          client_id: ${{ secrets.ADO_SP_CLIENT_ID }}
+          tenant_id: ${{ secrets.ADO_SP_TENANT_ID }}
+          client_secret: ${{ secrets.ADO_SP_CLIENT_SECRET }}
+          ado_organization: ${{ github.event.inputs.ado-organization || 'DefaultOrg' }}
+      
+      - name: Determine Title, Description and Type
+        id: work-item-details
+        if: github.event_name == 'issues'
+        run: |
+          ./PowerShell/parse-issue-details.ps1 `
+            -IssueTitle "${{ github.event.issue.title }}" `
+            -IssueBody "${{ github.event.issue.body }}" `
+            -IssueLabels "${{ join(github.event.issue.labels.*.name, ',') }}"
+      
+      - name: Create ADO Work Item from Issue
+        if: github.event_name == 'issues'
+        run: |
+          $tagsString = "GitHub,Issue#${{ github.event.issue.number }}"
+          $issueLabels = "${{ join(github.event.issue.labels.*.name, ',') }}"
+          if ($issueLabels) {
+            $tagsString += ",$issueLabels"
+          }
+          
+          $orgName = "DefaultOrg"  # Replace with your default org
+          $projectName = "DefaultProject"  # Replace with your default project
+          
+          if ("${{ github.event.inputs.ado-organization }}" -ne "") {
+            $orgName = "${{ github.event.inputs.ado-organization }}"
+          }
+          
+          if ("${{ github.event.inputs.ado-project }}" -ne "") {
+            $projectName = "${{ github.event.inputs.ado-project }}"
+          }
+          
+          $areaPath = "${{ steps.work-item-details.outputs.area }}"
+          $parentId = "${{ steps.work-item-details.outputs.parent }}"
+          
+          ./PowerShell/create-work-item.ps1 `
+            -Organization $orgName `
+            -Project $projectName `
+            -Title "${{ steps.work-item-details.outputs.title }}" `
+            -Description "${{ steps.work-item-details.outputs.description }}" `
+            -WorkItemType "${{ steps.work-item-details.outputs.type }}" `
+            -ParentId $parentId `
+            -AreaPath $areaPath `
+            -TagsString $tagsString `
+            -BearerToken "${{ steps.get-token.outputs.ado_token }}" `
+            -Pat ""
+      
+      - name: Create ADO Work Item from Workflow
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          ./PowerShell/create-work-item.ps1 `
+            -Organization "${{ github.event.inputs.ado-organization }}" `
+            -Project "${{ github.event.inputs.ado-project }}" `
+            -Title "${{ github.event.inputs.title }}" `
+            -Description "${{ github.event.inputs.description }}" `
+            -WorkItemType "${{ github.event.inputs.type }}" `
+            -ParentId "${{ github.event.inputs.ado-parent-id }}" `
+            -AreaPath "${{ github.event.inputs.ado-area }}" `
+            -TagsString "${{ github.event.inputs.ado-tags }}" `
+            -BearerToken "${{ steps.get-token.outputs.ado_token }}" `
+            -Pat ""
