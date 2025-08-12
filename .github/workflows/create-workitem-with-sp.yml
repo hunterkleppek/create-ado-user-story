@@ -57,11 +57,6 @@ jobs:
           tenant-id: ${{ secrets.ADO_SP_TENANT_ID }}
           client-secret: ${{ secrets.ADO_SP_CLIENT_SECRET }}
           organization: ${{ github.event.inputs.ado-organization || 'SECURAInsurance' }}
-
-      - name: Dump get-token outputs
-        run: |
-          echo "All outputs from get-token:"
-          echo "${{ toJson(steps.get-token.outputs) }}"
       
       - name: Determine Title, Description and Type
         id: work-item-details
