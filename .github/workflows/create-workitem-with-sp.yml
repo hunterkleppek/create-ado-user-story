@@ -46,7 +46,7 @@ jobs:
       - name: Checkout Token Generator
         uses: actions/checkout@v3
         with:
-          repository: hu03939_secura/get-accesstoken-from-serviceprinciple-workflow
+          repository: hunterkleppek/get-accesstoken-from-serviceprinciple-workflow
           path: get-token-repo
       
       - name: Get Azure DevOps Token
