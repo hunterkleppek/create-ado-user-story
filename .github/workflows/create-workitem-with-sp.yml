@@ -62,11 +62,6 @@ jobs:
             -IssueTitle "${{ github.event.issue.title }}" `
             -IssueBody "${{ github.event.issue.body }}" `
             -IssueLabels "${{ join(github.event.issue.labels.*.name, ',') }}"
-
-      - name: Dump get-token outputs
-        run: |
-          echo "All outputs from get-token:"
-          echo "${{ toJson(steps.get-token.outputs) }}"
       
       - name: Create ADO Work Item from Issue
         if: github.event_name == 'issues'
@@ -77,7 +72,7 @@ jobs:
           $result = ./PowerShell/create-ado-story.ps1 `
             -Organization "${{ github.event.inputs.ado-organization || 'SECURAInsurance' }}" `
             -Project "${{ github.event.inputs.ado-project }}" `
-            -BearerToken "${{ steps.get-token.outputs.ado_token }}" `
+            -BearerToken "${{ steps.get-token.outputs.token }}" `
             -IssueTitle "${{ steps.work-item-details.outputs.title }}" `
             -IssueBody "${{ steps.work-item-details.outputs.description }}" `
             -WorkItemType "${{ steps.work-item-details.outputs.type }}" `
