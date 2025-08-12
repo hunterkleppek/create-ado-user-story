@@ -89,7 +89,7 @@ jobs:
           $result = ./PowerShell/create-ado-story.ps1 `
             -Organization "${{ github.event.inputs.ado-organization }}" `
             -Project "${{ github.event.inputs.ado-project }}" `
-            -BearerToken "${{ steps.get-token.outputs.ado_token }}" `
+            -BearerToken "${{ steps.get-token.outputs.token }}" `
             -IssueTitle "${{ github.event.inputs.title }}" `
             -IssueBody "${{ github.event.inputs.description }}" `
             -WorkItemType "${{ github.event.inputs.type }}"
