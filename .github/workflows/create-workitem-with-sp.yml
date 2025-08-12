@@ -59,8 +59,8 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         shell: pwsh
         run: |
-          $parseResult = ./PowerShell/parse-issue-details.ps1 \
-            -IssueTitle "${{ github.event.inputs.title }}" \
+          $parseResult = ./PowerShell/parse-issue-details.ps1 `
+            -IssueTitle "${{ github.event.inputs.title }}" `
             -IssueBody "${{ github.event.inputs.description }}"
           Write-Host $parseResult
 
