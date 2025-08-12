@@ -8,6 +8,10 @@ on:
         required: false
         description: 'Azure DevOps organization'
         default: 'SECURAInsurance'
+      ado-project:
+        type: string
+        required: true
+        description: 'Azure DevOps project'
       title:
         type: string
         required: true
@@ -30,6 +34,11 @@ on:
       ado-tags:
         type: string
         description: 'Comma-separated list of tags to apply to the work item'
+        required: false
+        default: ''
+      issue-body:
+        type: string
+        description: 'Raw issue body (for parsing Area and Parent)'
         required: false
         default: ''
 
@@ -58,25 +67,30 @@ jobs:
             $description = "${{ steps.parse-description.outputs.clean_description }}"
           }
           
-          # Get area path (from issue or from input)
-          $areaPath = "${{ inputs.ado-area }}"
+          # Get area path and parent ID from parsed description if available
+          $areaPath = ""
+          $parentId = ""
+          
           if ("${{ steps.parse-description.outputs.area }}" -ne "") {
             $areaPath = "${{ steps.parse-description.outputs.area }}"
           }
           
-          # Get parent ID (from issue or from input)
-          $parentId = "${{ inputs.ado-parent-id }}"
           if ("${{ steps.parse-description.outputs.parent }}" -ne "") {
             $parentId = "${{ steps.parse-description.outputs.parent }}"
           }
           
-          ./PowerShell/create-work-item.ps1 `
+          $tagsArray = @()
+          if ("${{ inputs.ado-tags }}") {
+            $tagsArray = "${{ inputs.ado-tags }}".Split(',')
+          }
+          
+          ./PowerShell/create-ado-story.ps1 `
             -Organization "${{ inputs.ado-org }}" `
             -Project "${{ inputs.ado-project }}" `
-            -Title "${{ inputs.title }}" `
-            -Description "$description" `
+            -BearerToken "${{ inputs.ado-token }}" `
+            -IssueTitle "${{ inputs.title }}" `
+            -IssueBody "$description" `
             -WorkItemType "${{ inputs.type }}" `
-            -ParentId "$parentId" `
-            -AreaPath "$areaPath" `
-            -TagsString "${{ inputs.ado-tags }}" `
-            -BearerToken "${{ inputs.ado-token }}"
+            -ParentId $parentId `
+            -AreaPath $areaPath `
+            -Tags $tagsArray
