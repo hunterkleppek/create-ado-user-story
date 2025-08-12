@@ -98,6 +98,8 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         shell: pwsh
         run: |
+          $areaPath = "${{ steps.work_item_details.outputs.area }}"
+          if (-not $areaPath) { $areaPath = "Suite\\Integrations - 1" }
           $result = ./PowerShell/create-ado-story.ps1 `
             -Organization "${{ github.event.inputs.ado-organization }}" `
             -Project "${{ github.event.inputs.ado-project }}" `
@@ -106,7 +108,7 @@ jobs:
             -IssueBody "${{ steps.work_item_details.outputs.description }}" `
             -WorkItemType "${{ steps.work_item_details.outputs.type }}" `
             -ParentId "${{ steps.work_item_details.outputs.parent }}" `
-            -AreaPath "${{ steps.work_item_details.outputs.area }}"
+            -AreaPath $areaPath
           Write-Host "Script output: $result"
           $linkMatch = [regex]::Match($result, 'https?://\S+')
           if ($linkMatch.Success) {
