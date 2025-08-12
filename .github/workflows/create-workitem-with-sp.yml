@@ -56,7 +56,7 @@ jobs:
           client-id: ${{ secrets.ADO_SP_CLIENT_ID }}
           tenant-id: ${{ secrets.ADO_SP_TENANT_ID }}
           client-secret: ${{ secrets.ADO_SP_CLIENT_SECRET }}
-          ado_organization: ${{ github.event.inputs.ado-organization || 'SECURAInsurance' }}
+          organization: ${{ github.event.inputs.ado-organization || 'SECURAInsurance' }}
       
       - name: Determine Title, Description and Type
         id: work-item-details
