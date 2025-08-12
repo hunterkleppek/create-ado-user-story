@@ -12,10 +12,17 @@ on:
         description: 'Description of the work item'
         required: false
         default: ''
+      type:
+        description: 'Type of the work item (e.g., User Story, Task, Bug)'
+        required: true
+        default: 'User Story'
       ado-organization:
         description: 'Azure DevOps organization'
         required: false
         default: 'SECURAInsurance'
+      ado-project:
+        description: 'Azure DevOps project'
+        required: true
       ado-tags:
         description: 'Comma-separated list of tags'
         required: false
@@ -49,7 +56,7 @@ jobs:
           client_id: ${{ secrets.ADO_SP_CLIENT_ID }}
           tenant_id: ${{ secrets.ADO_SP_TENANT_ID }}
           client_secret: ${{ secrets.ADO_SP_CLIENT_SECRET }}
-          ado_organization: ${{ github.event.inputs.ado-organization || 'DefaultOrg' }}
+          ado_organization: ${{ github.event.inputs.ado-organization || 'SECURAInsurance' }}
       
       - name: Determine Title, Description and Type
         id: work-item-details
@@ -69,43 +76,34 @@ jobs:
             $tagsString += ",$issueLabels"
           }
           
-          $orgName = "DefaultOrg"  # Replace with your default org
-          $projectName = "DefaultProject"  # Replace with your default project
-          
-          if ("${{ github.event.inputs.ado-organization }}" -ne "") {
-            $orgName = "${{ github.event.inputs.ado-organization }}"
-          }
-          
-          if ("${{ github.event.inputs.ado-project }}" -ne "") {
-            $projectName = "${{ github.event.inputs.ado-project }}"
-          }
-          
+          # Extract area and parent from the issue description in work-item-details
           $areaPath = "${{ steps.work-item-details.outputs.area }}"
           $parentId = "${{ steps.work-item-details.outputs.parent }}"
           
-          ./PowerShell/create-work-item.ps1 `
-            -Organization $orgName `
-            -Project $projectName `
-            -Title "${{ steps.work-item-details.outputs.title }}" `
-            -Description "${{ steps.work-item-details.outputs.description }}" `
+          ./PowerShell/create-ado-story.ps1 `
+            -Organization "${{ github.event.inputs.ado-organization || 'SECURAInsurance' }}" `
+            -Project "${{ github.event.inputs.ado-project }}" `
+            -BearerToken "${{ steps.get-token.outputs.ado_token }}" `
+            -IssueTitle "${{ steps.work-item-details.outputs.title }}" `
+            -IssueBody "${{ steps.work-item-details.outputs.description }}" `
             -WorkItemType "${{ steps.work-item-details.outputs.type }}" `
             -ParentId $parentId `
-            -AreaPath $areaPath `
-            -TagsString $tagsString `
-            -BearerToken "${{ steps.get-token.outputs.ado_token }}" `
-            -Pat ""
+            -Tags @($tagsString.Split(',')) `
+            -AreaPath $areaPath
       
       - name: Create ADO Work Item from Workflow
         if: github.event_name == 'workflow_dispatch'
         run: |
-          ./PowerShell/create-work-item.ps1 `
+          $tagsArray = @()
+          if ("${{ github.event.inputs.ado-tags }}") {
+            $tagsArray = "${{ github.event.inputs.ado-tags }}".Split(',')
+          }
+          
+          ./PowerShell/create-ado-story.ps1 `
             -Organization "${{ github.event.inputs.ado-organization }}" `
             -Project "${{ github.event.inputs.ado-project }}" `
-            -Title "${{ github.event.inputs.title }}" `
-            -Description "${{ github.event.inputs.description }}" `
-            -WorkItemType "${{ github.event.inputs.type }}" `
-            -ParentId "${{ github.event.inputs.ado-parent-id }}" `
-            -AreaPath "${{ github.event.inputs.ado-area }}" `
-            -TagsString "${{ github.event.inputs.ado-tags }}" `
             -BearerToken "${{ steps.get-token.outputs.ado_token }}" `
-            -Pat ""
+            -IssueTitle "${{ github.event.inputs.title }}" `
+            -IssueBody "${{ github.event.inputs.description }}" `
+            -WorkItemType "${{ github.event.inputs.type }}" `
+            -Tags $tagsArray
