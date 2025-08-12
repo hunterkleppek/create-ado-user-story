@@ -56,7 +56,7 @@ jobs:
       
       - name: Determine Title, Description and Type
         id: work-item-details
-        if: github.event_name == 'issues'
+        if: github.event_name == 'workflow_dispatch'
         run: |
           ./PowerShell/parse-issue-details.ps1 `
             -IssueTitle "${{ github.event.issue.title }}" `
@@ -64,7 +64,7 @@ jobs:
             -IssueLabels "${{ join(github.event.issue.labels.*.name, ',') }}"
       
       - name: Create ADO Work Item from Issue
-        if: github.event_name == 'issues'
+        if: github.event_name == 'workflow_dispatch'
         run: |
           # Extract area and parent from the issue description in work-item-details
           $areaPath = "${{ steps.work-item-details.outputs.area }}"
