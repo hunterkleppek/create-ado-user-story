@@ -1,8 +1,6 @@
 param(
     [string]$Organization,
     [string]$Project,
-    [string]$EpicId,
-    [string]$Pat,
     [string]$BearerToken,
     [string]$WorkItemType = "User Story",
     [string]$AreaPath,
