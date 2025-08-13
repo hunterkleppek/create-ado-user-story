@@ -24,6 +24,12 @@ else {
 # Escape backslashes in area path for JSON
 $EscapedAreaPath = $AreaPath -replace '\\', '\\'
 
+# Ensure AreaPath is set to a default if empty
+if (-not $AreaPath -or $AreaPath -eq "") {
+    $AreaPath = "Suite\\\\Integrations - 1"
+    Write-Host "AreaPath was empty, set to default: $AreaPath"
+}
+
 # Determine which parent ID to use (EpicId or ParentId)
 $ParentWorkItemId = if (-not [string]::IsNullOrEmpty($ParentId)) { $ParentId } else { $EpicId }
 
