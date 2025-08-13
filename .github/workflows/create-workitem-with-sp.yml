@@ -20,6 +20,25 @@ on:
         description: 'Azure DevOps organization'
         required: false
         default: 'SECURAInsurance'
+
+  workflow_call:
+    inputs:
+      title:
+        description: 'Title of the work item'
+        required: true
+        type: string
+      description:
+        description: 'Description of the work item'
+        required: false
+        type: string
+      type:
+        description: 'Type of the work item (e.g., User Story, Task, Bug)'
+        required: true
+        type: string
+      ado-organization:
+        description: 'Azure DevOps organization'
+        required: false
+        type: string
   
   # You can also trigger this on issue creation
   issues:
