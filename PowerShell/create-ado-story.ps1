@@ -13,6 +13,34 @@ param(
     [string]$ParentId = ""  # Can be used instead of EpicId
 )
 
+# Validation block for required parameters
+if (-not $Organization -or $Organization -eq "") {
+    Write-Error "Organization is required and cannot be empty."
+    throw "Organization is required."
+}
+if (-not $Project -or $Project -eq "") {
+    Write-Error "Project is required and cannot be empty."
+    throw "Project is required."
+}
+if (-not $WorkItemType -or $WorkItemType -eq "") {
+    Write-Error "WorkItemType is required and cannot be empty."
+    throw "WorkItemType is required."
+}
+if (-not $Title -or $Title -eq "") {
+    Write-Error "Title is required and cannot be empty."
+    throw "Title is required."
+}
+if (-not $IssueBody -or $IssueBody -eq "") {
+    Write-Error "Description is required and cannot be empty."
+    throw "Description is required."
+}
+
+# Ensure WorkItemType is set to a default if empty
+if (-not $WorkItemType -or $WorkItemType -eq "") {
+    $WorkItemType = "User Story"
+    Write-Host "WorkItemType was empty, set to default: $WorkItemType"
+}
+
 # Process the title
 if (-not [string]::IsNullOrEmpty($RepositoryName)) {
     $Title = "$RepositoryName - $IssueTitle"
