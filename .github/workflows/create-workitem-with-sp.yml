@@ -103,7 +103,7 @@ jobs:
           $title = "${{ github.event.inputs.title }}"
           if (-not $title) { throw 'Title is required and cannot be empty.' }
 
-          $description = "${{ steps.work_item_details.outputs.clean_description }}"
+          $description = "${{ steps.work_item_details.outputs.description }}"
           if ($null -eq $description -or $description -eq "") { $description = "No description provided." }
 
           $project = "${{ steps.work_item_details.outputs.project }}"
