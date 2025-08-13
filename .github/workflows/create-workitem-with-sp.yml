@@ -59,28 +59,32 @@ jobs:
           $parseResult = ./PowerShell/parse-issue-details.ps1 `
             -IssueTitle "${{ github.event.inputs.title }}" `
             -IssueBody "${{ github.event.inputs.description }}"
-          Write-Host $parseResult
-
+          
+          # Capture and print results for debugging
+          Write-Host "Parse Result: $parseResult"
+          
       - name: Determine Title, Description and Type
         id: work-item-details
         if: github.event_name == 'issue'
         run: |
           ./PowerShell/parse-issue-details.ps1 `
             -IssueTitle "${{ github.event.issue.title }}" `
-            -IssueBody "${{ github.event.issue.body }}" `
-            -IssueLabels "${{ join(github.event.issue.labels.*.name, ',') }}"
+            -IssueBody "${{ github.event.issue.body }}"
       
       - name: Create ADO Work Item from Issue
         if: github.event_name == 'issue'
         run: |
-          # Extract area and parent from the issue description in work-item-details
+          # Use the outputs directly from previous step
           $areaPath = "${{ steps.work-item-details.outputs.area }}"
           $parentId = "${{ steps.work-item-details.outputs.parent }}"
+          $project = "${{ steps.work-item-details.outputs.project }}"
+          if (-not $project) { $project = "Suite" }
+          
           $result = ./PowerShell/create-ado-story.ps1 `
             -Organization "${{ github.event.inputs.ado-organization || 'SECURAInsurance' }}" `
-            -Project "${{ steps.work-item-details.outputs.project }}" `
+            -Project $project `
             -BearerToken "${{ steps.get-token.outputs.token }}" `
-            -IssueTitle "${{ steps.work-item-details.outputs.IssueTitle }}" `
+            -IssueTitle "${{ steps.work-item-details.outputs.title }}" `
             -IssueBody "${{ steps.work-item-details.outputs.clean_description }}" `
             -WorkItemType "${{ steps.work-item-details.outputs.type }}" `
             -ParentId $parentId `
@@ -96,14 +100,17 @@ jobs:
         shell: pwsh
         run: |
           $areaPath = "${{ steps.work_item_details.outputs.area }}"
-          if (-not $areaPath) { $areaPath = "Suite\\\\Integrations - 1" }
+          if (-not $areaPath) { $areaPath = "Suite\\Integrations - 1" }
+          
           $project = "${{ steps.work_item_details.outputs.project }}"
+          if (-not $project) { $project = "Suite" }
+          
           $result = ./PowerShell/create-ado-story.ps1 `
-            -Organization "${{ github.event.inputs.ado-organization }}" `
+            -Organization "${{ github.event.inputs.ado-organization || 'SECURAInsurance' }}" `
             -Project $project `
             -BearerToken "${{ steps.get-token.outputs.token }}" `
             -IssueTitle "${{ steps.work_item_details.outputs.title }}" `
-            -IssueBody "${{ steps.work_item_details.outputs.description }}" `
+            -IssueBody "${{ steps.work_item_details.outputs.clean_description }}" `
             -WorkItemType "${{ github.event.inputs.type }}" `
             -ParentId "${{ steps.work_item_details.outputs.parent }}" `
             -AreaPath $areaPath
