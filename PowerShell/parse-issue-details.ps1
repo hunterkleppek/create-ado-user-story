@@ -3,8 +3,8 @@ param (
     [Parameter(Mandatory = $true)]
     [string]$IssueTitle,
     
-    [Parameter(Mandatory = $false)]
-    [string]$IssueBody = ""
+    [Parameter(Mandatory = $true)]
+    [string]$IssueBody
 )
 
 # Initialize default values
@@ -29,15 +29,16 @@ if ([string]::IsNullOrWhiteSpace($areaPath)) {
 }
 
 
-# Improved description extraction: preserve any text after metadata on the same line
-$cleanDescription = $IssueBody
 
-# Remove Area and Parent metadata, but keep any text after them as description
-if ($cleanDescription -match "Area:\s*([^\r\n]+)") {
-    $cleanDescription = $cleanDescription -replace "Area:\s*([^\r\n]+)", ""
+# Improved description extraction: remove only Area and Parent metadata, preserve description text
+$cleanDescription = $IssueBody
+# Remove Area: ... (up to Parent: or end of string), but keep the rest
+if ($cleanDescription -match "Area:\s*([^\r\n]+?)(?=\s+Parent:|$)") {
+    $cleanDescription = $cleanDescription -replace "Area:\s*([^\r\n]+?)(?=\s+Parent:|$)", ""
 }
-if ($cleanDescription -match "Parent:\s*([^\r\n]+)") {
-    $cleanDescription = $cleanDescription -replace "Parent:\s*([^\r\n]+)", ""
+# Remove Parent: ... (up to next space or end of string), but keep the rest
+if ($cleanDescription -match "Parent:\s*['\""]?(\d+)['\""]?") {
+    $cleanDescription = $cleanDescription -replace "Parent:\s*['\""]?(\d+)['\""]?", ""
 }
 $cleanDescription = $cleanDescription.Trim()
 
