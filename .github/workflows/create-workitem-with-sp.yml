@@ -72,7 +72,7 @@ jobs:
           client-secret: ${{ secrets.ADO_SP_CLIENT_SECRET }}
           organization: ${{ github.event.inputs.ado-organization || 'SECURAInsurance' }}
       
-      - name: Debug: List files in action path
+      - name: Debug - List files in action path
         shell: pwsh
         run: |
           Write-Host "Action path: ${{ github.action_path }}"
