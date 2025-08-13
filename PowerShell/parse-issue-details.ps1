@@ -42,7 +42,19 @@ Write-Host "Project=$project"
 Write-Host "Area=$areaPath"
 Write-Host "Parent=$parentId"
 
-# Return a result object for workflow_dispatch context
+# Set outputs for GitHub Actions if running in Actions context
+if ($env:GITHUB_OUTPUT) {
+    @(
+        "title=$IssueTitle"
+        "description=$cleanDescription"
+        "type=$workItemType"
+        "project=$project"
+        "area=$areaPath"
+        "parent=$parentId"
+    ) | ForEach-Object { Add-Content -Path $env:GITHUB_OUTPUT -Value $_ }
+}
+
+# Return a result object for local/test context
 return @{
     title       = $IssueTitle
     description = $cleanDescription
