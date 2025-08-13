@@ -20,9 +20,6 @@ on:
         description: 'Azure DevOps organization'
         required: false
         default: 'SECURAInsurance'
-      ado-project:
-        description: 'Azure DevOps project'
-        required: true
   
   # You can also trigger this on issue creation
   issues:
@@ -110,9 +107,10 @@ jobs:
         run: |
           $areaPath = "${{ steps.work_item_details.outputs.area }}"
           if (-not $areaPath) { $areaPath = "Suite\\Integrations - 1" }
+          $project = "${{ steps.work_item_details.outputs.project }}"
           $result = ./PowerShell/create-ado-story.ps1 `
             -Organization "${{ github.event.inputs.ado-organization }}" `
-            -Project "${{ github.event.inputs.ado-project }}" `
+            -Project $project `
             -BearerToken "${{ steps.get-token.outputs.token }}" `
             -IssueTitle "${{ steps.work_item_details.outputs.title }}" `
             -IssueBody "${{ steps.work_item_details.outputs.description }}" `
@@ -124,3 +122,5 @@ jobs:
           if ($linkMatch.Success) {
             Write-Host "Work item link: $($linkMatch.Value)"
           }
+
+
