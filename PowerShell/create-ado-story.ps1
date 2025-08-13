@@ -37,8 +37,8 @@ if (-not $Project -or $Project -eq "") {
     throw "Project is required."
 }
 if (-not $WorkItemType -or $WorkItemType -eq "") {
-    Write-Error "WorkItemType is required and cannot be empty."
-    throw "WorkItemType is required."
+    $WorkItemType = "User Story"
+    Write-Host "WorkItemType was empty, set to default: $WorkItemType"
 }
 if (-not $Title -or $Title -eq "") {
     Write-Error "Title is required and cannot be empty."
@@ -47,12 +47,6 @@ if (-not $Title -or $Title -eq "") {
 if (-not $IssueBody -or $IssueBody -eq "") {
     Write-Error "Description is required and cannot be empty."
     throw "Description is required."
-}
-
-# Ensure WorkItemType is set to a default if empty
-if (-not $WorkItemType -or $WorkItemType -eq "") {
-    $WorkItemType = "User Story"
-    Write-Host "WorkItemType was empty, set to default: $WorkItemType"
 }
 
 # Process the title
@@ -160,3 +154,4 @@ catch {
     Write-Error "Failed to create work item: $_"
     throw
 }
+
