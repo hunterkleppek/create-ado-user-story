@@ -71,12 +71,6 @@ jobs:
           tenant-id: ${{ secrets.ADO_SP_TENANT_ID }}
           client-secret: ${{ secrets.ADO_SP_CLIENT_SECRET }}
           organization: ${{ github.event.inputs.ado-organization || 'SECURAInsurance' }}
-      
-      - name: Debug - List files in action path
-        shell: pwsh
-        run: |
-          Write-Host "Action path: ${{ github.action_path }}"
-          Get-ChildItem -Recurse "${{ github.action_path }}"
 
       - name: Parse Description
         id: work_item_details
