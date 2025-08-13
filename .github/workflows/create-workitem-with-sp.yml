@@ -61,16 +61,6 @@ jobs:
             -IssueBody "${{ github.event.inputs.description }}"
           Write-Host $parseResult
 
-      - name: Echo Parsed Workflow Outputs
-        if: github.event_name == 'workflow_dispatch'
-        shell: pwsh
-        run: |
-          Write-Host "Parsed Title: ${{ steps.work_item_details.outputs.title }}"
-          Write-Host "Parsed Description: ${{ steps.work_item_details.outputs.description }}"
-          Write-Host "Parsed Type: ${{ steps.work_item_details.outputs.type }}"
-          Write-Host "Parsed Parent: ${{ steps.work_item_details.outputs.parent }}"
-          Write-Host "Parsed Area: ${{ steps.work_item_details.outputs.area }}"
-
       - name: Determine Title, Description and Type
         id: work-item-details
         if: github.event_name == 'issue'
