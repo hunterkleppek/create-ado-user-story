@@ -31,9 +31,9 @@ elseif ($area) {
     $project = $area
 }
 
-# Output for GitHub Actions (Environment Files method)
-"title=$IssueTitle" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-"description=$cleanedDescription" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-"area=$area" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-"parent=$parent" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-"project=$project" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+# Echo results to the console
+Write-Host "Parsed Title: $IssueTitle"
+Write-Host "Parsed Description: $cleanedDescription"
+Write-Host "Parsed Area: $area"
+Write-Host "Parsed Parent: $parent"
+Write-Host "Parsed Project: $project"
