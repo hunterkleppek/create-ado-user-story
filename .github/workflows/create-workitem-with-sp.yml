@@ -70,7 +70,8 @@ jobs:
         id: work_item_details
         shell: pwsh
         run: |
-          $outputs = ${{ github.action_path }}/PowerShell/parse-issue-details.ps1 `
+          $scriptPath = "${{ github.action_path }}/PowerShell/parse-issue-details.ps1"
+          $outputs = & $scriptPath `
             -IssueTitle "${{ github.event.inputs.title }}" `
             -IssueBody "${{ github.event.inputs.description }}"
 
@@ -111,7 +112,8 @@ jobs:
           Write-Host "Labels: $($labels -join ', ')"
           Write-Host "Determined Work Item Type: $type"
 
-          $result = ${{ github.action_path }}/PowerShell/create-ado-story.ps1 `
+          $scriptPath = "${{ github.action_path }}/PowerShell/create-ado-story.ps1"
+          $result = & $scriptPath `
             -Organization "${{ github.event.inputs.ado-organization || 'SECURAInsurance' }}" `
             -Project $project `
             -BearerToken "${{ steps.get-token.outputs.token }}" `
@@ -148,7 +150,8 @@ jobs:
 
           $parentId = "${{ steps.work_item_details.outputs.parent }}"
 
-          $result = ${{ github.action_path }}/PowerShell/create-ado-story.ps1 `
+          $scriptPath = "${{ github.action_path }}/PowerShell/create-ado-story.ps1"
+          $result = & $scriptPath `
             -Organization "${{ github.event.inputs.ado-organization || 'SECURAInsurance' }}" `
             -Project $project `
             -BearerToken "${{ steps.get-token.outputs.token }}" `
@@ -162,5 +165,3 @@ jobs:
           if ($linkMatch.Success) {
             Write-Host "Work item link: $($linkMatch.Value)"
           }
-
-
