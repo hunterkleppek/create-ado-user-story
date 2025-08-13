@@ -90,10 +90,6 @@ This workflow can automatically create Azure DevOps work items from GitHub issue
   - If the issue has a label `epic`, the work item type will be **Epic**
   - If none of these labels are present, the default is **User Story**
 
-- **Tags:**
-  - All GitHub issue labels are added as tags to the Azure DevOps work item
-  - The tags `GitHub` and `Issue#{issue-number}` are also added automatically
-
 - **Area Path and Parent ID:**
   - You can specify an Area Path and Parent ID in the issue body using lines like:
     - `Area: Project\Area\SubArea`
@@ -111,3 +107,4 @@ For more details and examples, see:
 ---
 
 For questions or issues, please open an issue in this repository.
+
