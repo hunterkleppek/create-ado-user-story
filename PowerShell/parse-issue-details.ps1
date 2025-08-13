@@ -1,65 +1,39 @@
 param (
     [string]$IssueTitle,
-    [string]$IssueBody,
-    [string]$IssueLabels
+    [string]$IssueBody
 )
 
-# Default work item type
-$workItemType = "User Story"
-
-# Extract Area and Parent from description
-if ($IssueBody -match "Area:\s*(.+)$") {
-    $areaPath = $matches[1].Trim()
-    Write-Host "Found Area Path: $areaPath"
-    echo "area=$areaPath" >> $env:GITHUB_OUTPUT
+# Extract Area and Parent
+if ($IssueBody -match 'Area:\s*([^\s]+)') {
+    $area = $matches[1]
 }
 else {
-    $areaPath = ""
+    $area = ""
 }
-
-if ($IssueBody -match "Parent:\s*(\d+)") {
-    $parentId = $matches[1].Trim()
-    Write-Host "Found Parent ID: $parentId"
-    echo "parent=$parentId" >> $env:GITHUB_OUTPUT
+if ($IssueBody -match 'Parent:\s*(\d+)') {
+    $parent = $matches[1]
 }
 else {
-    $parentId = ""
+    $parent = ""
 }
 
-# Clean the description by removing Area and Parent lines
-$cleanedDescription = $IssueBody -replace "Area:.*", "" -replace "Parent:.*", ""
+# Remove Area and Parent from description
+$cleanedDescription = $IssueBody -replace 'Area:\s*[^\s]+', ''
+$cleanedDescription = $cleanedDescription -replace 'Parent:\s*\d+', ''
 $cleanedDescription = $cleanedDescription.Trim()
 
 # Project is the part before the first backslash in Area
 $project = ""
-if ($areaPath -match '^(.*?)\\\\') {
+if ($area -match '^(.*?)\\\\') {
     $project = $matches[1]
 }
-elseif ($areaPath) {
-    $project = $areaPath
+elseif ($area) {
+    $project = $area
 }
 
-# Check for specific labels and map them to work item types
-if ($IssueLabels -match "bug") {
-    $workItemType = "Bug"
-}
-elseif ($IssueLabels -match "task") {
-    $workItemType = "Task"
-}
-elseif ($IssueLabels -match "epic") {
-    $workItemType = "Epic"
-}
-elseif ($IssueLabels -match "feature") {
-    $workItemType = "Feature"
-}
-
-echo "title=$IssueTitle" >> $env:GITHUB_OUTPUT
-echo "description=$cleanedDescription" >> $env:GITHUB_OUTPUT
-echo "type=$workItemType" >> $env:GITHUB_OUTPUT
-
-# Output additional fields for GitHub Actions
-Write-Host "::set-output name=title::$IssueTitle"
-Write-Host "::set-output name=description::$cleanedDescription"
-Write-Host "::set-output name=area::$areaPath"
-Write-Host "::set-output name=parent::$parentId"
-Write-Host "::set-output name=project::$project"
+# Output for GitHub Actions (Environment Files method)
+"title=$IssueTitle" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+"description=$cleanedDescription" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+"area=$area" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+"parent=$parent" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+"project=$project" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
