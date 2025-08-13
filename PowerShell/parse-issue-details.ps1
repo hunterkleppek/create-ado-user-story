@@ -1,38 +1,116 @@
-param (
-    [string]$IssueTitle,
-    [string]$IssueBody
-)
+name: 'Create ADO Work Item using Service Principal'
 
-# Extract Area and Parent (handle single-quoted or unquoted values)
-$area = ""
-$parent = ""
+on:
+  # You can customize these triggers as needed
+  workflow_dispatch:
+    inputs:
+      title:
+        description: 'Title of the work item'
+        required: true
+        default: 'New Work Item'
+      description:
+        description: 'Description of the work item'
+        required: false
+        default: ''
+      type:
+        description: 'Type of the work item (e.g., User Story, Task, Bug)'
+        required: true
+        default: 'User Story'
+      ado-organization:
+        description: 'Azure DevOps organization'
+        required: false
+        default: 'SECURAInsurance'
+  
+  # You can also trigger this on issue creation
+  issues:
+    types: [opened, edited]
 
-if ($IssueBody -match "Area:\s*'([^']+)'|Area:\s*([^\s]+)") {
-    $area = if ($matches[1]) { $matches[1].Trim() } else { $matches[2].Trim() }
-}
-if ($IssueBody -match "Parent:\s*'([^']+)'|Parent:\s*([^\s]+)") {
-    $parent = if ($matches[1]) { $matches[1].Trim() } else { $matches[2].Trim() }
-}
+defaults:
+  run:
+    shell: pwsh
 
-# Remove Area and Parent from description
-$cleanedDescription = $IssueBody -replace "Area:\s*'[^']+'", ''
-$cleanedDescription = $cleanedDescription -replace "Area:\s*[^\s]+", ''
-$cleanedDescription = $cleanedDescription -replace "Parent:\s*'[^']+'", ''
-$cleanedDescription = $cleanedDescription -replace "Parent:\s*[^\s]+", ''
-$cleanedDescription = $cleanedDescription.Trim()
+jobs:
+  create-work-item:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      
+      - name: Checkout Token Generator
+        uses: actions/checkout@v3
+        with:
+          repository: hunterkleppek/get-accesstoken-from-serviceprinciple-workflow
+          path: get-token-repo
+      
+      - name: Get Azure DevOps Token
+        id: get-token
+        uses: ./get-token-repo
+        with:
+          client-id: ${{ secrets.ADO_SP_CLIENT_ID }}
+          tenant-id: ${{ secrets.ADO_SP_TENANT_ID }}
+          client-secret: ${{ secrets.ADO_SP_CLIENT_SECRET }}
+          organization: ${{ github.event.inputs.ado-organization || 'SECURAInsurance' }}
+      
+      - name: Parse Description for Workflow Dispatch
+        id: work_item_details
+        if: github.event_name == 'workflow_dispatch'
+        shell: pwsh
+        run: |
+          $parseResult = ./PowerShell/parse-issue-details.ps1 `
+            -IssueTitle "${{ github.event.inputs.title }}" `
+            -IssueBody "${{ github.event.inputs.description }}"
+          Write-Host $parseResult
 
-# Project is the part before the first backslash in Area
-$project = ""
-if ($area -match '^(.*?)\\\\') {
-    $project = $matches[1]
-}
-elseif ($area) {
-    $project = $area
-}
+      - name: Determine Title, Description and Type
+        id: work-item-details
+        if: github.event_name == 'issue'
+        run: |
+          ./PowerShell/parse-issue-details.ps1 `
+            -IssueTitle "${{ github.event.issue.title }}" `
+            -IssueBody "${{ github.event.issue.body }}" `
+            -IssueLabels "${{ join(github.event.issue.labels.*.name, ',') }}"
+      
+      - name: Create ADO Work Item from Issue
+        if: github.event_name == 'issue'
+        run: |
+          # Extract area and parent from the issue description in work-item-details
+          $areaPath = "${{ steps.work-item-details.outputs.area }}"
+          $parentId = "${{ steps.work-item-details.outputs.parent }}"
+          $result = ./PowerShell/create-ado-story.ps1 `
+            -Organization "${{ github.event.inputs.ado-organization || 'SECURAInsurance' }}" `
+            -Project "${{ steps.work-item-details.outputs.project }}" `
+            -BearerToken "${{ steps.get-token.outputs.token }}" `
+            -IssueTitle "${{ steps.work-item-details.outputs.IssueTitle }}" `
+            -IssueBody "${{ steps.work-item-details.outputs.clean_description }}" `
+            -WorkItemType "${{ steps.work-item-details.outputs.type }}" `
+            -ParentId $parentId `
+            -AreaPath $areaPath
+          Write-Host "Script output: $result"
+          $linkMatch = [regex]::Match($result, 'https?://\S+')
+          if ($linkMatch.Success) {
+            Write-Host "Work item link: $($linkMatch.Value)"
+          }
+      
+      - name: Create ADO Work Item from Workflow
+        if: github.event_name == 'workflow_dispatch'
+        shell: pwsh
+        run: |
+          $areaPath = "${{ steps.work_item_details.outputs.area }}"
+          if (-not $areaPath) { $areaPath = "Suite\\\\Integrations - 1" }
+          $project = "${{ steps.work_item_details.outputs.project }}"
+          $result = ./PowerShell/create-ado-story.ps1 `
+            -Organization "${{ github.event.inputs.ado-organization }}" `
+            -Project $project `
+            -BearerToken "${{ steps.get-token.outputs.token }}" `
+            -IssueTitle "${{ steps.work_item_details.outputs.title }}" `
+            -IssueBody "${{ steps.work_item_details.outputs.description }}" `
+            -WorkItemType "${{ github.event.inputs.type }}" `
+            -ParentId "${{ steps.work_item_details.outputs.parent }}" `
+            -AreaPath $areaPath
+          Write-Host "Script output: $result"
+          $linkMatch = [regex]::Match($result, 'https?://\S+')
+          if ($linkMatch.Success) {
+            Write-Host "Work item link: $($linkMatch.Value)"
+          }
 
-# Echo results to the console
-Write-Host "Parsed Title: $IssueTitle"
-Write-Host "Parsed Description: $cleanedDescription"
-Write-Host "Parsed Area: $area"
-Write-Host "Parsed Parent: $parent"
-Write-Host "Parsed Project: $project"
+
