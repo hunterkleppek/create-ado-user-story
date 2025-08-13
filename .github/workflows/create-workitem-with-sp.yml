@@ -62,7 +62,7 @@ jobs:
           
           # Capture and print results for debugging
           Write-Host "Parse Result: $parseResult"
-          
+      
       - name: Determine Title, Description and Type
         id: work-item-details
         if: github.event_name == 'issue'
@@ -105,12 +105,15 @@ jobs:
           $project = "${{ steps.work_item_details.outputs.project }}"
           if (-not $project) { $project = "Suite" }
           
+          # Use direct input parameter for title instead of relying on output
+          $issueTitle = "${{ github.event.inputs.title }}"
+          
           $result = ./PowerShell/create-ado-story.ps1 `
             -Organization "${{ github.event.inputs.ado-organization || 'SECURAInsurance' }}" `
             -Project $project `
             -BearerToken "${{ steps.get-token.outputs.token }}" `
-            -IssueTitle "${{ steps.work_item_details.outputs.title }}" `
-            -IssueBody "${{ steps.work_item_details.outputs.clean_description }}" `
+            -IssueTitle $issueTitle `
+            -IssueBody "${{ github.event.inputs.description }}" `
             -WorkItemType "${{ github.event.inputs.type }}" `
             -ParentId "${{ steps.work_item_details.outputs.parent }}" `
             -AreaPath $areaPath
