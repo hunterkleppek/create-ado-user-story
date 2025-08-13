@@ -96,8 +96,9 @@ jobs:
         shell: pwsh
         run: |
           $areaPath = "${{ steps.work_item_details.outputs.area }}"
-          if (-not $areaPath) { $areaPath = "Suite\\Integrations - 1" }
+          if (-not $areaPath) { $areaPath = "Suite\\\\Integrations - 1" }
           $project = "${{ steps.work_item_details.outputs.project }}"
+          if (-not $project) { $project = "Suite" }
           $result = ./PowerShell/create-ado-story.ps1 `
             -Organization "${{ github.event.inputs.ado-organization }}" `
             -Project $project `
