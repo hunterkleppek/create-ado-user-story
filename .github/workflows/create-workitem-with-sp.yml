@@ -99,29 +99,29 @@ jobs:
       - name: Create ADO Work Item from Workflow
         if: github.event_name == 'workflow_dispatch'
         shell: pwsh
-        run: |   
-          $areaPath = "${{ steps.work-item-details.outputs.area }}"
-          $parentId = "${{ steps.work-item-details.outputs.parent }}"
-          $project = "${{ steps.work-item-details.outputs.project }}"
+        run: |
+          $areaPath = "${{ steps.work_item_details.outputs.area }}"
+          $parentId = "${{ steps.work_item_details.outputs.parent }}"
+          $project = "${{ steps.work_item_details.outputs.project }}"
 
           Write-Host "Org: ${{ github.event.inputs.ado-organization }}"
-          Write-Host "Project: ${{ steps.work-item-details.outputs.project }}"
+          Write-Host "Project: ${{ steps.work_item_details.outputs.project }}"
           Write-Host "Token: ${{ steps.get-token.outputs.token }}"
           Write-Host "Title: ${{ github.event.inputs.title }}"
-          Write-Host "Description: ${{ steps.work-item-details.outputs.description }}"
+          Write-Host "Description: ${{ steps.work_item_details.outputs.description }}"
           Write-Host "Type: ${{ github.event.inputs.type }}"
           Write-Host "Parent: ${{ steps.work_item_details.outputs.parent }}"
-          Write-Host "Area: ${{ steps.work-item-details.outputs.area }}"
+          Write-Host "Area: ${{ steps.work_item_details.outputs.area }}"
 
           $result = ./PowerShell/create-ado-story.ps1 `
             -Organization "${{ github.event.inputs.ado-organization || 'SECURAInsurance' }}" `
-            -Project ${{ steps.work-item-details.outputs.project }} `
+            -Project ${{ steps.work_item_details.outputs.project }} `
             -BearerToken "${{ steps.get-token.outputs.token }}" `
             -IssueTitle ${{ github.event.inputs.title }} `
-            -IssueBody "${{ steps.work-item-details.outputs.description }}" `
+            -IssueBody "${{ steps.work_item_details.outputs.description }}" `
             -WorkItemType "${{ github.event.inputs.type }}" `
             -ParentId "${{ steps.work_item_details.outputs.parent }}" `
-            -AreaPath ${{ steps.work-item-details.outputs.area }}
+            -AreaPath ${{ steps.work_item_details.outputs.area }}
           Write-Host "Script output: $result"
           $linkMatch = [regex]::Match($result, 'https?://\S+')
           if ($linkMatch.Success) {
