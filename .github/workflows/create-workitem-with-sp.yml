@@ -73,8 +73,8 @@ jobs:
           organization: ${{ github.event.inputs.ado-organization || 'SECURAInsurance' }}
 
       - name: Parse Description on Workflow Dispatch
-        if: github.event_name == 'workflow_dispatch'
         id: work_item_details
+        if: github.event_name == 'workflow_dispatch'
         shell: pwsh
         run: |
           $scriptPath = "${{ github.workspace }}/action-repo/PowerShell/parse-issue-details.ps1"
@@ -83,15 +83,15 @@ jobs:
             -IssueBody "${{ github.event.inputs.description }}"
 
       - name: Parse Description on Workflow Call
-        if: github.event_name == 'workflow_call'
         id: work_call_details
+        if: github.event_name == 'workflow_call'
         shell: pwsh
         run: |
-          if (-not "${{ github.event.inputs.title }}") { throw 'Title is required and cannot be empty.' }
+          if (-not "${{ inputs.title }}") { throw 'Title is required and cannot be empty.' }
           $scriptPath = "${{ github.workspace }}/action-repo/PowerShell/parse-issue-details.ps1"
           $outputs = & $scriptPath `
-            -IssueTitle "${{ github.event.inputs.title }}" `
-            -IssueBody "${{ github.event.inputs.description }}"
+            -IssueTitle "${{ inputs.title }}" `
+            -IssueBody "${{ inputs.description }}"
 
       - name: Create ADO Work Item from Remote Repository
         if: github.event_name == 'workflow_call'
