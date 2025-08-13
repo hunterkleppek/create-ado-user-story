@@ -56,12 +56,13 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         shell: pwsh
         run: |
-          $parseResult = ./PowerShell/parse-issue-details.ps1 `
+          $outputs = ./PowerShell/parse-issue-details.ps1 `
             -IssueTitle "${{ github.event.inputs.title }}" `
             -IssueBody "${{ github.event.inputs.description }}"
-          
-          # Capture and print results for debugging
-          Write-Host "Parse Result: $parseResult"
+          # Print each property and value for debug
+          foreach ($key in $outputs.Keys) {
+            Write-Host ("Parse Result: {0} = {1}" -f $key, $outputs[$key])
+          }
       
       - name: Determine Title, Description and Type
         id: work-item-details
@@ -111,6 +112,7 @@ jobs:
           Write-Host "Type: ${{ github.event.inputs.type }}"
           Write-Host "Parent: ${{ steps.work_item_details.outputs.parent }}"
           Write-Host "Area: ${{ steps.work-item-details.outputs.area }}"
+
           $result = ./PowerShell/create-ado-story.ps1 `
             -Organization "${{ github.event.inputs.ado-organization || 'SECURAInsurance' }}" `
             -Project ${{ steps.work-item-details.outputs.project }} `
