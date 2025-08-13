@@ -17,12 +17,6 @@ When an issue is created or edited, the workflow checks for specific labels to d
 
 If multiple of these labels are present, the first match in the order above is used.
 
-## Tags
-
-All GitHub issue labels are added as tags to the Azure DevOps work item, along with:
-- `GitHub`
-- `Issue#{issue-number}`
-
 ## Specifying Area Path and Parent ID in the Description
 
 You can include special metadata in your issue description to set the Area Path and Parent ID:
@@ -117,3 +111,4 @@ When the workflow is triggered by an issue and no specific organization or proje
 - Project: "DefaultProject" (you should change this in the workflow file)
 
 To customize these defaults, edit the workflow file and update the fallback values.
+
