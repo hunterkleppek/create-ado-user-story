@@ -71,23 +71,51 @@ jobs:
           ./PowerShell/parse-issue-details.ps1 `
             -IssueTitle "${{ github.event.issue.title }}" `
             -IssueBody "${{ github.event.issue.body }}"
-      
+
       - name: Create ADO Work Item from Issue
         if: github.event_name == 'issue'
+        shell: pwsh
         run: |
-          # Use the outputs directly from previous step
-          $areaPath = "${{ steps.work-item-details.outputs.area }}"
-          $parentId = "${{ steps.work-item-details.outputs.parent }}"
+          $title = "${{ steps.work-item-details.outputs.title }}"
+          if (-not $title) { throw 'Title is required and cannot be empty.' }
+
+          $description = "${{ steps.work-item-details.outputs.description }}"
+          if ($null -eq $description -or $description -eq "") { $description = "No description provided." }
+
           $project = "${{ steps.work-item-details.outputs.project }}"
           if (-not $project) { $project = "Suite" }
-          
+
+          $areaPath = "${{ steps.work-item-details.outputs.area }}"
+          # Remove any surrounding single or double quotes
+          $areaPath = $areaPath.Trim("'", '"')
+          # Replace double backslashes with single backslash
+          $areaPath = $areaPath -replace '\\{2}', '\\'
+          if (-not $areaPath) { $areaPath = "Suite\\Integrations - 1" }
+
+          $parentId = "${{ steps.work-item-details.outputs.parent }}"
+
+          # Determine work item type from issue labels
+          $labels = @()
+          if ($env:GITHUB_EVENT_PATH) {
+            $event = Get-Content $env:GITHUB_EVENT_PATH | ConvertFrom-Json
+            $labels = $event.issue.labels | ForEach-Object { $_.name }
+          }
+          $type = "User Story" # default
+          if ($labels -contains "bug") { $type = "Bug" }
+          elseif ($labels -contains "task") { $type = "Task" }
+          elseif ($labels -contains "story") { $type = "User Story" }
+          elseif ($labels -contains "feature") { $type = "Feature" }
+          elseif ($labels -contains "epic") { $type = "Epic" }
+          Write-Host "Labels: $($labels -join ', ')"
+          Write-Host "Determined Work Item Type: $type"
+
           $result = ./PowerShell/create-ado-story.ps1 `
             -Organization "${{ github.event.inputs.ado-organization || 'SECURAInsurance' }}" `
             -Project $project `
             -BearerToken "${{ steps.get-token.outputs.token }}" `
-            -IssueTitle "${{ steps.work-item-details.outputs.title }}" `
-            -IssueBody "${{ steps.work-item-details.outputs.clean_description }}" `
-            -WorkItemType "${{ steps.work-item-details.outputs.type }}" `
+            -IssueTitle $title `
+            -IssueBody $description `
+            -WorkItemType $type `
             -ParentId $parentId `
             -AreaPath $areaPath
           Write-Host "Script output: $result"

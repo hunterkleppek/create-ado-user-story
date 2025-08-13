@@ -16,7 +16,6 @@ Here's a complete example showing how to trigger the workflow to create a work i
    - **ADO Project**: "marketing-website"
    - **ADO Parent ID**: "45123"
    - **Area Path**: "MyProject\\Security\\Authentication"
-   - **Tags**: "GitHub,Security,Authentication"
 6. Click "Run workflow"
 
 ## Programmatic Trigger using GitHub CLI
@@ -34,12 +33,35 @@ gh workflow run "Create ADO Work Item using Service Principal" \
   --field ado-project="marketing-website" \
   --field ado-parent-id="45123" \
   --field ado-area="MyProject\\Security\\Authentication" \
-  --field ado-tags="GitHub,Security,Authentication"
 ```
+
 
 ## Trigger from GitHub Issue
 
 The workflow will automatically run when a new issue is created in your repository. Just create an issue with a descriptive title and body, and a corresponding work item will be created in Azure DevOps.
+
+
+### Using Labels to Control Work Item Type
+
+- Add labels like `bug`, `task`, `feature`, or `epic` to your issue to control the Azure DevOps work item type. If none of these labels are present, the default is **User Story**.
+
+
+#### Example
+
+1. Create a new GitHub issue with:
+  - Title: "API returns 500 error on POST"
+  - Description:
+    ```
+    When submitting a POST request to /api/orders, the API returns a 500 error.
+
+    Area: Backend\API
+    Parent: 12345
+    ```
+  - Labels: `bug`
+
+2. The workflow will create a **Bug** work item in Azure DevOps with:
+  - Area Path: Backend\API
+  - Parent: 12345
 
 ## Example REST API Call
 
@@ -59,8 +81,7 @@ curl -X POST \
       "ado-organization": "contoso",
       "ado-project": "marketing-website",
       "ado-parent-id": "45123",
-      "ado-area": "MyProject\\\\Security\\\\Authentication",
-      "ado-tags": "GitHub,Security,Authentication"
+      "ado-area": "MyProject\\\\Security\\\\Authentication"
     }
   }'
 ```
@@ -109,7 +130,6 @@ jobs:
             -IssueBody "${{ github.event.pull_request.body }}" `
             -WorkItemType "Task" `
             -ParentId "12345" `
-            -Tags @("GitHub", "PR", "AutoCreated") `
             -AreaPath "YourProject\\Development\\PRs"
         shell: pwsh
 ```
@@ -158,10 +178,6 @@ on:
         description: 'Area path for the work item'
         required: false
         default: 'MyProject\\Security\\Authentication'
-      ado-tags:
-        description: 'Comma-separated list of tags'
-        required: false
-        default: 'GitHub,Security,Authentication'
    
    jobs:
      create-work-item:

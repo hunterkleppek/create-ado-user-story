@@ -9,17 +9,6 @@ param(
     [string]$ParentId = ""  # Can be used instead of EpicId
 )
 
-# Echo all inputs for debugging
-Write-Host "--- INPUTS ---"
-Write-Host "Organization: $Organization"
-Write-Host "Project: $Project"
-Write-Host "BearerToken: $BearerToken"
-Write-Host "WorkItemType: $WorkItemType"
-Write-Host "AreaPath: $AreaPath"
-Write-Host "IssueTitle: $IssueTitle"
-Write-Host "IssueBody: $IssueBody"
-Write-Host "ParentId: $ParentId"
-Write-Host "--- END INPUTS ---"
 
 # Validation block for required parameters
 if (-not $Organization -or $Organization -eq "") {
