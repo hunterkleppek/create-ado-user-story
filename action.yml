@@ -1,89 +1,9 @@
-name: 'Create Azure DevOps Work Item'
-description: 'Creates a work item in Azure DevOps using a service principal or PAT'
-author: 'Your Name'
+name: 'Create Azure DevOps Work Item (Reusable Workflow)'
+description: |
+  This repository provides a reusable workflow for creating work items in Azure DevOps from GitHub issues or workflow dispatch.
+  
+  To use, call the workflow in `.github/workflows/create-workitem-with-sp.yml` via `workflow_call` or `workflow_dispatch`.
 
-inputs:
-  ado-organization:
-    description: 'Azure DevOps organization'
-    required: true
-  ado-project:
-    description: 'Azure DevOps project'
-    required: true
-  title:
-    description: 'Title of the work item'
-    required: true
-    default: 'New Work Item'
-  description:
-    description: 'Description of the work item'
-    required: false
-    default: ''
-  type:
-    description: 'Type of the work item (e.g., User Story, Task, Bug)'
-    required: true
-    default: 'User Story'
-  ado-parent-id:
-    description: 'ID of the parent work item (e.g., Epic ID)'
-    required: false
-    default: ''
-  ado-area:
-    description: 'Area path for the work item'
-    required: false
-    default: ''
-  ado-tags:
-    description: 'Comma-separated list of tags'
-    required: false
-    default: 'GitHub,AutoCreated'
-  ado-token:
-    description: 'Azure DevOps bearer token or PAT'
-    required: true
-  issue-body:
-    description: 'Raw issue body (for parsing Area and Parent)'
-    required: false
-    default: ''
-
-runs:
-  using: 'composite'
-  steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v3
-      with:
-        repository: ${{ github.repository }}
-      
-    - name: Parse Description for Area and Parent
-      id: parse-description
-      if: inputs.issue-body != ''
-      shell: pwsh
-      run: |
-        ${{ github.action_path }}/PowerShell/parse-description.ps1 -IssueBody "${{ inputs.issue-body }}"
-      
-    - name: Create ADO Work Item
-      shell: pwsh
-      run: |
-        # Get description (cleaned if from issue body, otherwise use input description)
-        $description = "${{ inputs.description }}"
-        if ("${{ steps.parse-description.outputs.clean_description }}" -ne "") {
-          $description = "${{ steps.parse-description.outputs.clean_description }}"
-        }
-        
-        # Get area path (from issue or from input)
-        $areaPath = "${{ inputs.ado-area }}"
-        if ("${{ steps.parse-description.outputs.area }}" -ne "") {
-          $areaPath = "${{ steps.parse-description.outputs.area }}"
-        }
-        
-        # Get parent ID (from issue or from input)
-        $parentId = "${{ inputs.ado-parent-id }}"
-        if ("${{ steps.parse-description.outputs.parent }}" -ne "") {
-          $parentId = "${{ steps.parse-description.outputs.parent }}"
-        }
-        
-        ${{ github.action_path }}/PowerShell/create-ado-story.ps1 `
-          -Organization "${{ inputs.ado-organization }}" `
-          -Project "${{ inputs.ado-project }}" `
-          -IssueTitle "${{ inputs.title }}" `
-          -IssueBody "$description" `
-          -WorkItemType "${{ inputs.type }}" `
-          -ParentId "$parentId" `
-          -Tags "${{ inputs.ado-tags }}".Split(',') `
-          -AreaPath "$areaPath" `
-          -BearerToken "${{ inputs.ado-token }}"
+branding:
+  icon: 'check-circle'
+  color: 'blue'
