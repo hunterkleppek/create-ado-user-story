@@ -3,8 +3,8 @@ param (
     [Parameter(Mandatory = $true)]
     [string]$IssueTitle,
     
-    [Parameter(Mandatory = $true)]
-    [string]$IssueBody
+    [Parameter(Mandatory = $false)]
+    [string]$IssueBody = ""
 )
 
 # Initialize default values
@@ -52,9 +52,10 @@ Write-Host "Parent=$parentId"
 
 # Set outputs for GitHub Actions if running in Actions context
 if ($env:GITHUB_OUTPUT) {
+    $escapedDescription = $cleanDescription -replace "`r?`n", "%0A"
     @(
         "title=$IssueTitle"
-        "description=$cleanDescription"
+        "description=$escapedDescription"
         "type=$workItemType"
         "project=$project"
         "area=$areaPath"
