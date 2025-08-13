@@ -72,10 +72,22 @@ jobs:
           client-secret: ${{ secrets.ADO_SP_CLIENT_SECRET }}
           organization: ${{ github.event.inputs.ado-organization || 'SECURAInsurance' }}
 
-      - name: Parse Description
+      - name: Parse Description on Workflow Dispatch
+        if: github.event_name == 'workflow_dispatch'
         id: work_item_details
         shell: pwsh
         run: |
+          $scriptPath = "${{ github.workspace }}/action-repo/PowerShell/parse-issue-details.ps1"
+          $outputs = & $scriptPath `
+            -IssueTitle "${{ github.event.inputs.title }}" `
+            -IssueBody "${{ github.event.inputs.description }}"
+
+      - name: Parse Description on Workflow Call
+        if: github.event_name == 'workflow_call'
+        id: work_call_details
+        shell: pwsh
+        run: |
+          if (-not "${{ github.event.inputs.title }}") { throw 'Title is required and cannot be empty.' }
           $scriptPath = "${{ github.workspace }}/action-repo/PowerShell/parse-issue-details.ps1"
           $outputs = & $scriptPath `
             -IssueTitle "${{ github.event.inputs.title }}" `
@@ -85,23 +97,23 @@ jobs:
         if: github.event_name == 'workflow_call'
         shell: pwsh
         run: |
-          $title = "${{ steps.work_item_details.outputs.title }}"
+          $title = "${{ steps.work_call_details.outputs.title }}"
           if (-not $title) { throw 'Title is required and cannot be empty.' }
 
-          $description = "${{ steps.work_item_details.outputs.description }}"
+          $description = "${{ steps.work_call_details.outputs.description }}"
           if ($null -eq $description -or $description -eq "") { $description = "No description provided." }
 
-          $project = "${{ steps.work_item_details.outputs.project }}"
+          $project = "${{ steps.work_call_details.outputs.project }}"
           if (-not $project) { $project = "Suite" }
 
-          $areaPath = "${{ steps.work_item_details.outputs.area }}"
+          $areaPath = "${{ steps.work_call_details.outputs.area }}"
           # Remove any surrounding single or double quotes
           $areaPath = $areaPath.Trim("'", '"')
           # Replace double backslashes with single backslash
           $areaPath = $areaPath -replace '\\{2}', '\\'
           if (-not $areaPath) { $areaPath = "Suite\\Integrations - 1" }
 
-          $parentId = "${{ steps.work_item_details.outputs.parent }}"
+          $parentId = "${{ steps.work_call_details.outputs.parent }}"
 
           # Determine work item type from issue labels
           $labels = @()
@@ -117,6 +129,8 @@ jobs:
           elseif ($labels -contains "epic") { $type = "Epic" }
           Write-Host "Labels: $($labels -join ', ')"
           Write-Host "Determined Work Item Type: $type"
+
+
 
           $scriptPath = "${{ github.workspace }}/action-repo/PowerShell/create-ado-story.ps1"
           $result = & $scriptPath `
