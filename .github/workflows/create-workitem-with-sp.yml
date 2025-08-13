@@ -84,7 +84,7 @@ jobs:
 
       - name: Parse Description on Workflow Call
         id: work_call_details
-        if: github.event_name == 'workflow_call'
+        if: github.event_name == 'issue'
         shell: pwsh
         run: |
           if (-not "${{ inputs.title }}") { throw 'Title is required and cannot be empty.' }
@@ -94,7 +94,7 @@ jobs:
             -IssueBody "${{ inputs.description }}"
 
       - name: Create ADO Work Item from Remote Repository
-        if: github.event_name == 'workflow_call'
+        if: github.event_name == 'issue'
         shell: pwsh
         run: |
           $title = "${{ steps.work_call_details.outputs.title }}"
