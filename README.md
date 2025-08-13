@@ -78,12 +78,30 @@ For information on using service principal authentication, see:
 - [Service Principal Integration](docs/service-principal-integration.md)
 - [Example Usage](docs/example-usage.md)
 
+
 ## GitHub Issue Integration
 
-This workflow can automatically create Azure DevOps work items from GitHub issues. You can use specific labels on GitHub issues to control the type and properties of the created work items.
+This workflow can automatically create Azure DevOps work items from GitHub issues. The workflow uses the following logic:
 
-For detailed information on how to use GitHub issue labels to control work item creation, see:
-- [Issue Label Mapping](docs/issue-label-mapping.md)
+- **Work Item Type Mapping:**
+  - If the issue has a label `bug`, the work item type will be **Bug**
+  - If the issue has a label `task`, the work item type will be **Task**
+  - If the issue has a label `feature`, the work item type will be **Feature**
+  - If the issue has a label `epic`, the work item type will be **Epic**
+  - If none of these labels are present, the default is **User Story**
+
+- **Tags:**
+  - All GitHub issue labels are added as tags to the Azure DevOps work item
+  - The tags `GitHub` and `Issue#{issue-number}` are also added automatically
+
+- **Area Path and Parent ID:**
+  - You can specify an Area Path and Parent ID in the issue body using lines like:
+    - `Area: Project\Area\SubArea`
+    - `Parent: 12345`
+  - These lines will be removed from the work item description
+
+For more details and examples, see:
+- [Issue Standard Layout](docs/issue-standard-layout.md)
 
 ## Notes
 - The action is designed for use in workflows triggered by GitHub issues.
