@@ -15,14 +15,13 @@ $parentId = ""
 $cleanDescription = $IssueBody
 
 # Extract metadata from issue body using regex
-if ($IssueBody -match "Area:\s*([^\r\n]+)") {
+if ($IssueBody -match "Area:\s*([^'\r\n]+)") {
     $areaPath = $Matches[1].Trim()
 }
 
-if ($IssueBody -match "Parent:\s*([^\r\n]+)") {
+if ($IssueBody -match "Parent:\s*'?(\d+)'?") {
     $parentId = $Matches[1].Trim()
 }
-
 
 # Clean description - remove the metadata
 $cleanDescription = $IssueBody `
@@ -30,21 +29,21 @@ $cleanDescription = $IssueBody `
     -replace "Parent:\s*([^\r\n]+)", ""
 $cleanDescription = $cleanDescription.Trim()
 
-# Output the parsed values
-Write-Host "Title: $IssueTitle"
-Write-Host "Clean Description: $cleanDescription"
-Write-Host "Type: $workItemType"
-Write-Host "Project: $project"
-Write-Host "Area: $areaPath"
-Write-Host "Parent: $parentId"
+# Output the parsed values for logging
+Write-Host "Title=$IssueTitle"
+Write-Host "Description=$cleanDescription"
+Write-Host "Type=$workItemType"
+Write-Host "Project=$project"
+Write-Host "Area=$areaPath"
+Write-Host "Parent=$parentId"
 
-# Set GitHub Actions outputs
-Write-Output "::set-output name=title::$IssueTitle"
-Write-Output "::set-output name=clean_description::$cleanDescription"
-Write-Output "::set-output name=type::$workItemType" 
-Write-Output "::set-output name=project::$project"
-Write-Output "::set-output name=area::$areaPath"
-Write-Output "::set-output name=parent::$parentId"
+# Using echo to set GitHub Actions outputs (modern approach)
+Write-Output "title=$IssueTitle" >> $env:GITHUB_OUTPUT
+Write-Output "clean_description=$cleanDescription" >> $env:GITHUB_OUTPUT
+Write-Output "type=$workItemType" >> $env:GITHUB_OUTPUT
+Write-Output "project=$project" >> $env:GITHUB_OUTPUT
+Write-Output "area=$areaPath" >> $env:GITHUB_OUTPUT
+Write-Output "parent=$parentId" >> $env:GITHUB_OUTPUT
 
 # Return a result object for workflow_dispatch context
 return @{
