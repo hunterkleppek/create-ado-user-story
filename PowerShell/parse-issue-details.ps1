@@ -3,20 +3,22 @@ param (
     [string]$IssueBody
 )
 
-# Extract Area and Parent (handle single-quoted values)
+# Extract Area and Parent (handle single-quoted or unquoted values)
 $area = ""
 $parent = ""
 
-if ($IssueBody -match "Area:\s*'([^']+)'") {
-    $area = $matches[1].Trim()
+if ($IssueBody -match "Area:\s*'([^']+)'|Area:\s*([^\s]+)") {
+    $area = if ($matches[1]) { $matches[1].Trim() } else { $matches[2].Trim() }
 }
-if ($IssueBody -match "Parent:\s*'([^']+)'") {
-    $parent = $matches[1].Trim()
+if ($IssueBody -match "Parent:\s*'([^']+)'|Parent:\s*([^\s]+)") {
+    $parent = if ($matches[1]) { $matches[1].Trim() } else { $matches[2].Trim() }
 }
 
 # Remove Area and Parent from description
 $cleanedDescription = $IssueBody -replace "Area:\s*'[^']+'", ''
+$cleanedDescription = $cleanedDescription -replace "Area:\s*[^\s]+", ''
 $cleanedDescription = $cleanedDescription -replace "Parent:\s*'[^']+'", ''
+$cleanedDescription = $cleanedDescription -replace "Parent:\s*[^\s]+", ''
 $cleanedDescription = $cleanedDescription.Trim()
 
 # Project is the part before the first backslash in Area
