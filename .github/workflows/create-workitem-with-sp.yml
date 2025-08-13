@@ -41,7 +41,7 @@ on:
         type: string
 
   issues:
-    types: [opened, edited]
+    types: [opened]
 
 defaults:
   run:
