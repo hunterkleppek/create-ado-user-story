@@ -40,6 +40,9 @@ on:
         required: false
         type: string
 
+  issues:
+    types: [opened, edited]
+
 defaults:
   run:
     shell: pwsh
@@ -87,11 +90,13 @@ jobs:
         if: github.event_name == 'issues'
         shell: pwsh
         run: |
-          if (-not "${{ inputs.title }}") { throw 'Title is required and cannot be empty.' }
+          $issueTitle = "${{ github.event.issue.title }}"
+          $issueBody = "${{ github.event.issue.body }}"
+          if (-not $issueTitle) { throw 'Title is required and cannot be empty.' }
           $scriptPath = "${{ github.workspace }}/action-repo/PowerShell/parse-issue-details.ps1"
           $outputs = & $scriptPath `
-            -IssueTitle "${{ inputs.title }}" `
-            -IssueBody "${{ inputs.description }}"
+            -IssueTitle $issueTitle `
+            -IssueBody $issueBody
 
       - name: Create ADO Work Item on Issues
         if: github.event_name == 'issues'
