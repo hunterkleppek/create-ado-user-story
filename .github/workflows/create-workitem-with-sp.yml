@@ -82,9 +82,9 @@ jobs:
             -IssueTitle "${{ github.event.inputs.title }}" `
             -IssueBody "${{ github.event.inputs.description }}"
 
-      - name: Parse Description on Workflow Call
+      - name: Parse Description on Issues
         id: work_call_details
-        if: github.event_name == 'issue'
+        if: github.event_name == 'issues'
         shell: pwsh
         run: |
           if (-not "${{ inputs.title }}") { throw 'Title is required and cannot be empty.' }
@@ -93,8 +93,8 @@ jobs:
             -IssueTitle "${{ inputs.title }}" `
             -IssueBody "${{ inputs.description }}"
 
-      - name: Create ADO Work Item from Remote Repository
-        if: github.event_name == 'issue'
+      - name: Create ADO Work Item on Issues
+        if: github.event_name == 'issues'
         shell: pwsh
         run: |
           $title = "${{ steps.work_call_details.outputs.title }}"
