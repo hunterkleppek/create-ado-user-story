@@ -28,10 +28,17 @@ if ([string]::IsNullOrWhiteSpace($areaPath)) {
     $areaPath = "Suite\\Integrations - 1"
 }
 
-# Clean description - remove the metadata
-$cleanDescription = $IssueBody `
-    -replace "Area:\s*([^\r\n]+)", "" `
-    -replace "Parent:\s*([^\r\n]+)", ""
+
+# Improved description extraction: preserve any text after metadata on the same line
+$cleanDescription = $IssueBody
+
+# Remove Area and Parent metadata, but keep any text after them as description
+if ($cleanDescription -match "Area:\s*([^\r\n]+)") {
+    $cleanDescription = $cleanDescription -replace "Area:\s*([^\r\n]+)", ""
+}
+if ($cleanDescription -match "Parent:\s*([^\r\n]+)") {
+    $cleanDescription = $cleanDescription -replace "Parent:\s*([^\r\n]+)", ""
+}
 $cleanDescription = $cleanDescription.Trim()
 
 # Output the parsed values for logging
