@@ -99,6 +99,10 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         shell: pwsh
         run: |   
+          $areaPath = "${{ steps.work-item-details.outputs.area }}"
+          $parentId = "${{ steps.work-item-details.outputs.parent }}"
+          $project = "${{ steps.work-item-details.outputs.project }}"
+          
           Write-Host "Org: ${{ github.event.inputs.ado-organization }}"
           Write-Host "Project: $project"
           Write-Host "Token: ${{ steps.get-token.outputs.token }}"
