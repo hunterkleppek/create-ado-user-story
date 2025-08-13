@@ -4,8 +4,6 @@ param(
     [string]$BearerToken,
     [string]$WorkItemType = "User Story",
     [string]$AreaPath,
-    [string[]]$Tags = @(),
-    [string]$RepositoryName = "",
     [string]$IssueTitle,
     [string]$IssueBody,
     [string]$ParentId = ""  # Can be used instead of EpicId
@@ -15,13 +13,9 @@ param(
 Write-Host "--- INPUTS ---"
 Write-Host "Organization: $Organization"
 Write-Host "Project: $Project"
-Write-Host "EpicId: $EpicId"
-Write-Host "Pat: $Pat"
 Write-Host "BearerToken: $BearerToken"
 Write-Host "WorkItemType: $WorkItemType"
 Write-Host "AreaPath: $AreaPath"
-Write-Host "Tags: $($Tags -join ', ')"
-Write-Host "RepositoryName: $RepositoryName"
 Write-Host "IssueTitle: $IssueTitle"
 Write-Host "IssueBody: $IssueBody"
 Write-Host "ParentId: $ParentId"
@@ -37,8 +31,8 @@ if (-not $Project -or $Project -eq "") {
     throw "Project is required."
 }
 if (-not $WorkItemType -or $WorkItemType -eq "") {
-    $WorkItemType = "User Story"
-    Write-Host "WorkItemType was empty, set to default: $WorkItemType"
+    Write-Error "WorkItemType is required and cannot be empty."
+    throw "WorkItemType is required."
 }
 if (-not $Title -or $Title -eq "") {
     Write-Error "Title is required and cannot be empty."
@@ -47,6 +41,12 @@ if (-not $Title -or $Title -eq "") {
 if (-not $IssueBody -or $IssueBody -eq "") {
     Write-Error "Description is required and cannot be empty."
     throw "Description is required."
+}
+
+# Ensure WorkItemType is set to a default if empty
+if (-not $WorkItemType -or $WorkItemType -eq "") {
+    $WorkItemType = "User Story"
+    Write-Host "WorkItemType was empty, set to default: $WorkItemType"
 }
 
 # Process the title
@@ -154,4 +154,3 @@ catch {
     Write-Error "Failed to create work item: $_"
     throw
 }
-
