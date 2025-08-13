@@ -78,7 +78,7 @@ jobs:
           $parentId = "${{ steps.work-item-details.outputs.parent }}"
           $result = ./PowerShell/create-ado-story.ps1 `
             -Organization "${{ github.event.inputs.ado-organization || 'SECURAInsurance' }}" `
-            -Project "${{ github.event.inputs.ado-project }}" `
+            -Project "${{ steps.work-item-details.outputs.project }}" `
             -BearerToken "${{ steps.get-token.outputs.token }}" `
             -IssueTitle "${{ steps.work-item-details.outputs.title }}" `
             -IssueBody "${{ steps.work-item-details.outputs.description }}" `
@@ -98,6 +98,7 @@ jobs:
           $areaPath = "${{ steps.work_item_details.outputs.area }}"
           if (-not $areaPath) { $areaPath = "Suite\\Integrations - 1" }
           $project = "${{ steps.work_item_details.outputs.project }}"
+          if (-not $project) { $project = "Suite" }
           $result = ./PowerShell/create-ado-story.ps1 `
             -Organization "${{ github.event.inputs.ado-organization }}" `
             -Project $project `
