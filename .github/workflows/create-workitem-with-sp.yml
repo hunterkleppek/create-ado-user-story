@@ -39,10 +39,6 @@ on:
         description: 'Azure DevOps organization'
         required: false
         type: string
-  
-  # You can also trigger this on issue creation
-  issues:
-    types: [opened, edited]
 
 defaults:
   run:
@@ -72,27 +68,14 @@ jobs:
       
       - name: Parse Description for Workflow Dispatch
         id: work_item_details
-        if: github.event_name == 'workflow_dispatch'
         shell: pwsh
         run: |
           $outputs = ./PowerShell/parse-issue-details.ps1 `
             -IssueTitle "${{ github.event.inputs.title }}" `
             -IssueBody "${{ github.event.inputs.description }}"
-          # Print each property and value for debug
-          foreach ($key in $outputs.Keys) {
-            Write-Host ("Parse Result: {0} = {1}" -f $key, $outputs[$key])
-          }
-      
-      - name: Determine Title, Description and Type
-        id: work-item-details
-        if: github.event_name == 'issue'
-        run: |
-          ./PowerShell/parse-issue-details.ps1 `
-            -IssueTitle "${{ github.event.issue.title }}" `
-            -IssueBody "${{ github.event.issue.body }}"
 
       - name: Create ADO Work Item from Issue
-        if: github.event_name == 'issue'
+        if: github.event_name == 'workflow_call'
         shell: pwsh
         run: |
           $title = "${{ steps.work-item-details.outputs.title }}"
